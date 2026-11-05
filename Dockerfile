@@ -3,6 +3,9 @@ FROM node:20 AS build
 
 ARG CI=true
 ARG NODE_ENV=production
+# Used by the Vite HTML transform to cache-bust /api/v4/i18n/core
+ARG GITHUB_SHA=unknown
+ENV GITHUB_SHA=$GITHUB_SHA
 
 RUN git config --global url."https://".insteadOf git://
 

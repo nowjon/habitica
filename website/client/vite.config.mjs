@@ -60,6 +60,20 @@ export default defineConfig({
   plugins: [
     webfontDownload(),
     vue(),
+    {
+      name: 'habitica-i18n-cache-bust',
+      transformIndexHtml (html) {
+        // Bust browser cache of /api/v4/i18n/core on each client build so newly
+        // added locale keys are picked up alongside hashed JS/CSS assets.
+        const version = process.env.GITHUB_SHA
+          || process.env.SOURCE_VERSION
+          || Date.now().toString(36);
+        return html.replace(
+          /src=(['"])\/api\/v4\/i18n\/core\1/,
+          `src=$1/api/v4/i18n/core?v=${version}$1`,
+        );
+      },
+    },
     compression({
       filename: 'compressed/[base]',
       compressionOptions: { level: 9 },
