@@ -71,6 +71,7 @@
   "silver": "Silver (100 silver = 1 gold)",
   "price": "Price",
   "tags": "Tags",
+  "hideRewards": "Hide Rewards",
   "newTag": "New Tag",
   "editTagsText": "Edit Tags",
   "toRequired": "You must supply a \"to\" property",
