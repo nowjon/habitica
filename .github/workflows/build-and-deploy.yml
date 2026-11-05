@@ -70,6 +70,7 @@ jobs:
       - name: Deploy over SSH
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_JUMP: ${{ secrets.DEPLOY_JUMP }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
@@ -78,11 +79,16 @@ jobs:
           chmod 700 ~/.ssh
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+          # CI Tailscale often cannot reach vm-apps directly; jump via Aristaeus.
+          ssh-keyscan -H "$DEPLOY_JUMP" >> ~/.ssh/known_hosts 2>/dev/null || true
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            "root@${DEPLOY_JUMP}" "ssh-keyscan -H ${DEPLOY_HOST} 2>/dev/null" >> ~/.ssh/known_hosts || true
 
           ssh -i ~/.ssh/deploy_key \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=accept-new \
+            -o ProxyJump="root@${DEPLOY_JUMP}" \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'set -euo pipefail
              cd /opt/stacks/habitica
