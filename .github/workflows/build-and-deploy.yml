@@ -88,8 +88,8 @@ jobs:
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             'set -euo pipefail
              cd /opt/stacks/habitica
-             docker compose pull
-             docker compose up -d --force-recreate server
+             sudo docker compose pull
+             sudo docker compose up -d --force-recreate server
              for i in $(seq 1 30); do
                code=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3070/api/v3/status || true)
                if [ "$code" = "200" ] || [ "$code" = "302" ]; then
@@ -99,5 +99,5 @@ jobs:
                sleep 2
              done
              echo "habitica status check timed out" >&2
-             docker compose ps
+             sudo docker compose ps
              exit 1'
