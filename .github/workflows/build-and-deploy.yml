@@ -89,8 +89,10 @@ jobs:
              docker compose pull
              docker compose up -d --force-recreate server
              for i in $(seq 1 30); do
-               if curl -fsS http://127.0.0.1:3070/api/v3/status >/dev/null; then
-                 echo "habitica status ok"
+               code=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3070/api/v3/status || true)
+               # 200 when X-Forwarded-Proto is set; 302 forceSSL redirect is still "up"
+               if [ "$code" = "200" ] || [ "$code" = "302" ]; then
+                 echo "habitica status ok (http $code)"
                  exit 0
                fi
                sleep 2
