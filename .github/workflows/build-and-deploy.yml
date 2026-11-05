@@ -59,14 +59,11 @@ jobs:
 
   deploy:
     needs: build-and-push
-    runs-on: ubuntu-latest
+    # Self-hosted on vm-agent (LAN/Tailscale path to Aristaeus → vm-apps).
+    # Ephemeral github-hosted Tailscale nodes are ACL-blocked from SSH to homelab hosts.
+    runs-on: [self-hosted, habitica-deploy]
     if: vars.HABITICA_DEPLOY_ENABLED == 'true'
     steps:
-      - name: Connect to Tailscale
-        uses: tailscale/github-action@v3
-        with:
-          authkey: ${{ secrets.TS_AUTHKEY }}
-
       - name: Deploy over SSH
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
@@ -80,7 +77,6 @@ jobs:
           printf '%s\n' "$SSH_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
 
-          # CI Tailscale often cannot reach vm-apps directly; jump via Aristaeus.
           ssh-keyscan -H "$DEPLOY_JUMP" >> ~/.ssh/known_hosts 2>/dev/null || true
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
             "root@${DEPLOY_JUMP}" "ssh-keyscan -H ${DEPLOY_HOST} 2>/dev/null" >> ~/.ssh/known_hosts || true
@@ -96,7 +92,6 @@ jobs:
              docker compose up -d --force-recreate server
              for i in $(seq 1 30); do
                code=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3070/api/v3/status || true)
-               # 200 when X-Forwarded-Proto is set; 302 forceSSL redirect is still "up"
                if [ "$code" = "200" ] || [ "$code" = "302" ]; then
                  echo "habitica status ok (http $code)"
                  exit 0
