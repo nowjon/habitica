@@ -12,7 +12,8 @@ Fork of [awinterstein/habitica](https://github.com/awinterstein/habitica) for th
 |------|-------|---------|
 | `TS_AUTHKEY` | Actions secret | Tailscale auth key (reusable) for the CI runner |
 | `DEPLOY_SSH_KEY` | Actions secret | Private key for `ubuntu@vm-apps` |
-| `DEPLOY_HOST` | Actions secret | Tailscale IP or MagicDNS for vm-apps |
+| `DEPLOY_HOST` | Actions secret | `10.2.2.20` (vm-apps LAN) |
+| `DEPLOY_JUMP` | Actions secret | `100.96.145.104` (Aristaeus Tailscale) |
 | `DEPLOY_USER` | Actions secret | `ubuntu` |
 | `HABITICA_DEPLOY_ENABLED` | Actions variable | Set to `true` after the stack exists |
 
