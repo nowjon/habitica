@@ -22,8 +22,10 @@ api.geti18nCoreBrowserScript = {
   url: '/i18n/core',
   async handler (req, res) {
     if (IS_PROD) {
+      // Must revalidate so newly deployed locale keys (e.g. hideRewards) are not
+      // served from a stale browser cache while hashed client assets update.
       res.set({
-        'Cache-Control': 'private',
+        'Cache-Control': 'private, no-cache, must-revalidate',
       });
       res.sendFile(`${BROWSER_SCRIPT_CACHE_PATH}core/${req.language}.js`);
     } else {
@@ -51,7 +53,7 @@ api.geti18nContentBrowserScript = {
   async handler (req, res) {
     if (IS_PROD) {
       res.set({
-        'Cache-Control': 'private',
+        'Cache-Control': 'private, no-cache, must-revalidate',
       });
       res.sendFile(`${BROWSER_SCRIPT_CACHE_PATH}content/${req.language}.js`);
     } else {
