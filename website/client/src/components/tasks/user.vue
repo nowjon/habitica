@@ -28,14 +28,14 @@
             <button
               class="btn btn-secondary dropdown-toggle ml-2 d-flex align-items-center search-button"
               type="button"
-              :class="{active: selectedTags.length > 0}"
+              :class="{active: selectedTags.length > 0 || hideRewards}"
               @click="toggleFilterPanel()"
             >
               <div
                 class="svg-icon filter-icon mr-2"
                 v-html="icons.filter"
               ></div>
-              <span v-once>{{ $t('tags') }}</span>
+              <span v-once>{{ $t('filters') }}</span>
             </button>
           </div>
           <div
@@ -149,6 +149,33 @@
                 </div>
               </div>
             </div>
+            <div
+              v-if="!editingTags"
+              class="tags-category d-flex flex-column"
+            >
+              <div class="tags-header">
+                <strong v-once>{{ $t('rewards') }}</strong>
+              </div>
+              <div class="tags-list container">
+                <div class="row no-gutters">
+                  <div class="col-12">
+                    <div class="custom-control custom-checkbox">
+                      <input
+                        id="hide-rewards"
+                        class="custom-control-input"
+                        type="checkbox"
+                        :checked="hideRewards"
+                        @change="toggleHideRewards()"
+                      >
+                      <label
+                        class="custom-control-label"
+                        for="hide-rewards"
+                      >{{ $t('hideRewards') }}</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <emoji-auto-complete
               v-if="editingTags"
               ref="emojiAutocomplete"
@@ -214,7 +241,7 @@
             class="dropdown"
           >
             <div
-              v-for="type in columns"
+              v-for="type in taskTypes"
               :key="type"
               class="dropdown-item d-flex px-2 py-1"
               @click="createTask(type)"
@@ -237,7 +264,7 @@
         <task-column
           v-for="column in columns"
           :key="column"
-          class="col-lg-3 col-md-6"
+          :class="columnClass"
           :type="column"
           :is-user="true"
           :search-text="searchTextThrottled"
@@ -448,7 +475,7 @@ export default {
   mixins: [autoCompleteHelperMixin],
   data () {
     return {
-      columns: ['habit', 'daily', 'todo', 'reward'],
+      taskTypes: ['habit', 'daily', 'todo', 'reward'],
       searchText: null,
       searchTextThrottled: null,
       isFilterPanelOpen: false,
@@ -479,6 +506,18 @@ export default {
   },
   computed: {
     ...mapState({ user: 'user.data' }),
+    hideRewards () {
+      return Boolean(this.user.preferences.tasks.hideRewards);
+    },
+    columns () {
+      if (this.hideRewards) {
+        return this.taskTypes.filter(type => type !== 'reward');
+      }
+      return this.taskTypes;
+    },
+    columnClass () {
+      return this.hideRewards ? 'col-lg-4 col-md-6' : 'col-lg-3 col-md-6';
+    },
     activeTagText () {
       if (this.activeTagIndex === -1) {
         return this.newTag || '';
@@ -682,6 +721,11 @@ export default {
       const tagId = tag.id;
       if (this.temporarilySelectedTags.indexOf(tagId) !== -1) return true;
       return false;
+    },
+    toggleHideRewards () {
+      this.setUser({
+        'preferences.tasks.hideRewards': !this.hideRewards,
+      });
     },
     openBuyDialog (item) {
       this.$root.$emit('buyModal::showItem', item);

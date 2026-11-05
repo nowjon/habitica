@@ -637,6 +637,7 @@ export const UserSchema = new Schema({
     tasks: {
       groupByChallenge: { $type: Boolean, default: false }, // @TODO remove? not used
       confirmScoreNotes: { $type: Boolean, default: false }, // @TODO remove? not used
+      hideRewards: { $type: Boolean, default: false },
       mirrorGroupTasks: [
         { $type: String, validate: [v => validator.isUUID(v), 'Invalid group UUID.'], ref: 'Group' },
       ],
