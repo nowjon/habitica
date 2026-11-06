@@ -10,7 +10,7 @@ This repo’s Homelab Habitica must not stop at “PR opened.” After feature/f
 1. Create/update the PR, then **auto-merge** to `main` (prefer squash + delete branch).
 2. Wait for **Build and Deploy** on `main` to succeed (`build-and-push` and `deploy`).
 3. Confirm the live site: `https://habitica.best-villamil.com/api/v3/status` is `up` and the homepage returns 200.
-4. Confirm **image prune** completed in the deploy job (unused `ghcr.io/nowjon/habitica` images on vm-apps; log line `habitica image prune complete`).
+4. Confirm **image prune** completed in the deploy job (unused `ghcr.io/nowjon/habitica` images on the app host; log line `habitica image prune complete`).
 5. Summarize merge, deploy run, site health, and prune for the user.
 
 Full detail: `AGENTS.md` and `SELFHOST.md`.

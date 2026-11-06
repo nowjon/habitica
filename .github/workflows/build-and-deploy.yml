@@ -61,7 +61,7 @@ jobs:
 
   deploy:
     needs: build-and-push
-    # Self-hosted on vm-agent (LAN/Tailscale path to Aristaeus → vm-apps).
+    # Self-hosted runner with LAN/Tailscale SSH path (jump → app host).
     # Ephemeral github-hosted Tailscale nodes are ACL-blocked from SSH to homelab hosts.
     runs-on: [self-hosted, habitica-deploy]
     if: vars.HABITICA_DEPLOY_ENABLED == 'true'
