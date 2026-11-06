@@ -26,10 +26,21 @@ export async function getTag (store, payload) {
 
 export async function updateTag (store, payload) {
   const url = `/api/v4/tags/${payload.tagId}`;
-  const response = await axios.put(url, {
-    tagDetails: payload.tagDetails,
-  });
-  return response.data.data;
+  const body = payload.tagDetails ? { ...payload.tagDetails } : {};
+  if (!payload.tagDetails) {
+    if (payload.name !== undefined) body.name = payload.name;
+    if (payload.outlineColor !== undefined) body.outlineColor = payload.outlineColor;
+    if (payload.outlineWidth !== undefined) body.outlineWidth = payload.outlineWidth;
+  }
+  const response = await axios.put(url, body);
+
+  const updatedTag = response.data.data;
+  const tags = store.state.user.data.tags || [];
+  const index = tags.findIndex(tag => tag.id === payload.tagId);
+  if (index !== -1) {
+    Object.assign(tags[index], updatedTag);
+  }
+  return updatedTag;
 }
 
 export async function sortTag (store, payload) {
