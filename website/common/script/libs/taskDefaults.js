@@ -63,6 +63,7 @@ export default function taskDefaults (task, user) {
       frequency: 'daily',
       counterUp: 0,
       counterDown: 0,
+      disableHealthPenalty: false,
     });
   }
 
@@ -95,6 +96,7 @@ export default function taskDefaults (task, user) {
       daysOfMonth: [],
       weeksOfMonth: [],
       yesterDaily: true,
+      disableHealthPenalty: false,
     });
   }
 

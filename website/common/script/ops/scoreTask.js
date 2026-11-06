@@ -277,7 +277,7 @@ export default function scoreTask (options = {}, req = {}) {
     // Add habit value to habit-history (if different)
     if (delta > 0) {
       _addPoints(user, task, stats, direction, delta);
-    } else {
+    } else if (!task.disableHealthPenalty) {
       _subtractPoints(user, task, stats, delta);
     }
     _gainMP(user, max([0.25, 0.0025 * statsComputed(user).maxMP]) * (direction === 'down' ? -1 : 1));
@@ -305,7 +305,10 @@ export default function scoreTask (options = {}, req = {}) {
   } else if (task.type === 'daily') {
     if (cron) {
       delta += _changeTaskValue(user, task, direction, times, cron);
-      _subtractPoints(user, task, stats, delta);
+      // Missed Dailies can opt out of the Health penalty. Color, streaks, and mana still change.
+      if (!task.disableHealthPenalty) {
+        _subtractPoints(user, task, stats, delta);
+      }
       // Chilling frost should not affect challenge or group dailies
       if (!user.stats.buffs.streaks || task.challenge.id || task.group.id) task.streak = 0;
     } else {

@@ -745,6 +745,60 @@ describe('cron', async () => {
       expect(user.stats.hp).to.be.lessThan(hpBefore);
     });
 
+    it('should not do damage for missing a daily when its health penalty is disabled', async () => {
+      daysMissed = 1;
+      const hpBefore = user.stats.hp;
+      const { value } = tasksByType.dailys[0];
+      tasksByType.dailys[0].disableHealthPenalty = true;
+      tasksByType.dailys[0].startDate = moment(new Date()).subtract({ days: 1 });
+      await cron({
+        user, tasksByType, daysMissed,
+      });
+      expect(user.stats.hp).to.equal(hpBefore);
+      expect(tasksByType.dailys[0].value).to.be.lessThan(value);
+    });
+
+    it('should still damage for other missed dailies when one has its health penalty disabled', async () => {
+      daysMissed = 1;
+      const hpBefore = user.stats.hp;
+      tasksByType.dailys[0].disableHealthPenalty = true;
+      tasksByType.dailys[0].startDate = moment(new Date()).subtract({ days: 1 });
+
+      const otherDaily = new Tasks.daily(Tasks.Task.sanitize({ // eslint-disable-line new-cap
+        text: 'still hurts',
+        type: 'daily',
+      }));
+      otherDaily.startDate = moment(new Date()).subtract({ days: 1 });
+      tasksByType.dailys.push(otherDaily);
+
+      await cron({
+        user, tasksByType, daysMissed,
+      });
+
+      expect(user.stats.hp).to.be.lessThan(hpBefore);
+    });
+
+    it('should not spend stealth on a daily whose health penalty is disabled', async () => {
+      daysMissed = 1;
+      const hpBefore = user.stats.hp;
+      user.stats.buffs.stealth = 1;
+      tasksByType.dailys[0].disableHealthPenalty = true;
+      tasksByType.dailys[0].startDate = moment(new Date()).subtract({ days: 1 });
+
+      const otherDaily = new Tasks.daily(Tasks.Task.sanitize({ // eslint-disable-line new-cap
+        text: 'protected by stealth',
+        type: 'daily',
+      }));
+      otherDaily.startDate = moment(new Date()).subtract({ days: 1 });
+      tasksByType.dailys.push(otherDaily);
+
+      await cron({
+        user, tasksByType, daysMissed,
+      });
+
+      expect(user.stats.hp).to.equal(hpBefore);
+    });
+
     it('should not do damage for missing a daily when user is sleeping', async () => {
       user.preferences.sleep = true;
       daysMissed = 1;
@@ -814,6 +868,18 @@ describe('cron', async () => {
       });
 
       expect(progress.down).to.equal(-1);
+    });
+
+    it('should not decrement quest.progress.down when the missed daily disables health penalty', async () => {
+      daysMissed = 1;
+      tasksByType.dailys[0].disableHealthPenalty = true;
+      tasksByType.dailys[0].startDate = moment(new Date()).subtract({ days: 1 });
+
+      const progress = await cron({
+        user, tasksByType, daysMissed,
+      });
+
+      expect(progress.down).to.equal(0);
     });
 
     it('should not decrement quest.progress.down for missing a daily when user is sleeping', async () => {

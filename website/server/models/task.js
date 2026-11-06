@@ -258,6 +258,7 @@ TaskSchema.statics.sanitizeUserChallengeTask = function sanitizeUserChallengeTas
     'streak', 'checklist', 'attribute', 'reminders',
     'tags', 'notes', 'collapseChecklist',
     'alias', 'yesterDaily', 'counterDown', 'counterUp',
+    'disableHealthPenalty',
   ]);
 };
 
@@ -268,6 +269,7 @@ TaskSchema.statics.sanitizeUserGroupTask = function sanitizeUserGroupTask (taskO
     'streak', 'attribute', 'reminders',
     'tags', 'notes', 'collapseChecklist',
     'alias', 'yesterDaily', 'counterDown', 'counterUp',
+    'disableHealthPenalty',
   ]);
 };
 
@@ -348,7 +350,11 @@ export const Task = mongoose.model('Task', TaskSchema);
 // value is a Number
 // scoredUp and scoredDown only exist for habits and are numbers
 
-const habitDailySchema = () => ({ history: Array });
+const habitDailySchema = () => ({
+  history: Array,
+  // When true, missing this task does not reduce Health.
+  disableHealthPenalty: { $type: Boolean, default: false },
+});
 
 // dailys and todos shared fields
 const dailyTodoSchema = () => ({

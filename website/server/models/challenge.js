@@ -184,6 +184,9 @@ schema.methods.syncTasksToUser = async function syncChallengeTasksToUser (user, 
       matchingTask.userId = user._id;
       user.tasksOrder[`${chalTask.type}s`].push(matchingTask._id);
       setNextDue(matchingTask, user);
+      if (chalTask.type === 'habit' || chalTask.type === 'daily') {
+        matchingTask.disableHealthPenalty = Boolean(chalTask.disableHealthPenalty);
+      }
     } else {
       _.merge(matchingTask, syncableAttrs(chalTask));
       // Make sure the task is in user.tasksOrder
@@ -230,6 +233,9 @@ async function _addTaskFn (challenge, tasks, memberId) {
     // We want to sync the notes and tags when the task is first added to the challenge
     userTask.notes = chalTask.notes;
     userTask.tags.push(challenge._id);
+    if (chalTask.type === 'habit' || chalTask.type === 'daily') {
+      userTask.disableHealthPenalty = Boolean(chalTask.disableHealthPenalty);
+    }
 
     const tasksOrderList = updateTasksOrderQ.$push[`tasksOrder.${chalTask.type}s`];
     if (!tasksOrderList) {
