@@ -92,14 +92,21 @@ jobs:
              cd /opt/stacks/habitica
              sudo docker compose pull
              sudo docker compose up -d --force-recreate server
+             healthy=0
              for i in $(seq 1 30); do
                code=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3070/api/v3/status || true)
                if [ "$code" = "200" ] || [ "$code" = "302" ]; then
                  echo "habitica status ok (http $code)"
-                 exit 0
+                 healthy=1
+                 break
                fi
                sleep 2
              done
-             echo "habitica status check timed out" >&2
-             sudo docker compose ps
-             exit 1'
+             if [ "$healthy" != "1" ]; then
+               echo "habitica status check timed out" >&2
+               sudo docker compose ps
+               exit 1
+             fi
+             echo "Pruning unused ghcr.io/nowjon/habitica images..."
+             sudo docker image prune -af --filter "reference=ghcr.io/nowjon/habitica*"
+             echo "habitica image prune complete"'
