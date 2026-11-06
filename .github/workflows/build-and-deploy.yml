@@ -96,6 +96,11 @@ jobs:
                code=$(curl -sS -o /dev/null -w "%{http_code}" http://127.0.0.1:3070/api/v3/status || true)
                if [ "$code" = "200" ] || [ "$code" = "302" ]; then
                  echo "habitica status ok (http $code)"
+                 # Previous pulls leave unused images on vm-apps. The source
+                 # label limits this to habitica so other stacks stay put.
+                 echo "pruning unused habitica images"
+                 sudo docker image prune -af \
+                   --filter "label=org.opencontainers.image.source=https://github.com/${{ github.repository }}"
                  exit 0
                fi
                sleep 2
