@@ -290,6 +290,19 @@ describe('shared.ops.scoreTask', () => {
         expect(ref.afterUser.stats.exp).to.eql(0);
         expect(ref.afterUser.stats.gp).to.eql(0);
       });
+
+      it('down does not reduce health when the health penalty is disabled', () => {
+        habit.disableHealthPenalty = true;
+        const hpBefore = ref.afterUser.stats.hp;
+
+        scoreTask({
+          user: ref.afterUser, task: habit, direction: 'down', times: 5, cron: false,
+        }, {});
+
+        expect(habit.value).to.be.lessThan(0);
+        expect(habit.counterDown).to.equal(5);
+        expect(ref.afterUser.stats.hp).to.equal(hpBefore);
+      });
     });
 
     context('dailys', () => {
@@ -314,6 +327,22 @@ describe('shared.ops.scoreTask', () => {
         expect(daily.completed).to.not.eql(false);
         scoreTask({ user: ref.afterUser, task: daily, direction: 'down' });
         expect(daily.completed).to.eql(false);
+      });
+
+      it('does not reduce health for a missed daily when the health penalty is disabled', () => {
+        daily.disableHealthPenalty = true;
+        const hpBefore = ref.afterUser.stats.hp;
+        const valueBefore = daily.value;
+
+        scoreTask({
+          user: ref.afterUser,
+          task: daily,
+          direction: 'down',
+          cron: true,
+        });
+
+        expect(daily.value).to.be.lessThan(valueBefore);
+        expect(ref.afterUser.stats.hp).to.equal(hpBefore);
       });
     });
 

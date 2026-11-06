@@ -274,6 +274,23 @@
           />
         </template>
         <div
+          v-if="showHealthPenaltyOption"
+          class="health-penalty-option option mt-3"
+        >
+          <div class="d-flex align-items-center">
+            <checkbox
+              :id="healthPenaltyInputId"
+              :checked="Boolean(task.disableHealthPenalty)"
+              :text="$t('disableHealthPenalty')"
+              @update:checked="setHealthPenalty"
+            />
+            <information-icon
+              tooltip-id="disableHealthPenaltyHelp"
+              :tooltip="$t('disableHealthPenaltyHelp')"
+            />
+          </div>
+        </div>
+        <div
           v-if="task.type === 'todo' && (!challengeAccessRequired || task.date)"
           class="option mt-3"
         >
@@ -820,6 +837,12 @@
       }
     }
 
+    .health-penalty-option {
+      .form-check {
+        margin-bottom: 0;
+      }
+    }
+
     .option-item {
       margin-right: 48px;
       cursor: pointer;
@@ -1292,6 +1315,7 @@ import selectDifficulty from '@/components/tasks/modal-controls/selectDifficulty
 import selectTranslatedArray from '@/components/tasks/modal-controls/selectTranslatedArray';
 import lockableLabel from '@/components/tasks/modal-controls/lockableLabel';
 import selectList from '@/components/ui/selectList';
+import checkbox from '@/components/ui/checkbox';
 
 import syncTask from '../../mixins/syncTask';
 import emojiAutoComplete from '@/components/chat/emojiAutoComplete';
@@ -1319,6 +1343,7 @@ export default {
     toggleCheckbox,
     lockableLabel,
     selectList,
+    checkbox,
     emojiAutoComplete,
   },
   directives: {
@@ -1552,6 +1577,12 @@ export default {
         && this.user.preferences.automaticAllocation === true
         && this.user.preferences.allocationMode === 'taskbased';
     },
+    showHealthPenaltyOption () {
+      return this.task && (this.task.type === 'habit' || this.task.type === 'daily');
+    },
+    healthPenaltyInputId () {
+      return `disable-health-penalty-${this.purpose}`;
+    },
   },
   watch: {
     task () {
@@ -1588,6 +1619,9 @@ export default {
     setDifficulty (level) {
       if (this.challengeAccessRequired) return;
       this.task.priority = level;
+    },
+    setHealthPenalty (enabled) {
+      this.$set(this.task, 'disableHealthPenalty', enabled);
     },
     toggleUpDirection () {
       if (this.challengeAccessRequired) return;

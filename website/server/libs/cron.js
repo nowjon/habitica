@@ -239,7 +239,8 @@ export async function cron (options = {}) {
         if (shouldDo(thatDay.toDate(), task, user.preferences)) {
           atLeastOneDailyDue = true;
           scheduleMisses += 1;
-          if (user.stats.buffs.stealth && !isTeamBoardTask) {
+          // Tasks that cannot deal Health damage should not use up Stealth.
+          if (user.stats.buffs.stealth && !isTeamBoardTask && !task.disableHealthPenalty) {
             user.stats.buffs.stealth -= 1;
             evadeTask += 1;
           }
@@ -274,7 +275,7 @@ export async function cron (options = {}) {
               cron: true,
             });
 
-            if (!CRON_SEMI_SAFE_MODE) {
+            if (!CRON_SEMI_SAFE_MODE && !task.disableHealthPenalty) {
               // Apply damage from a boss, less damage for Trivial priority (difficulty)
               user.party.quest.progress.down += delta * (task.priority < 1 ? task.priority : 1);
               // NB: Medium and Hard priorities do not increase damage from boss.
