@@ -108,5 +108,12 @@ jobs:
                exit 1
              fi
              echo "Pruning unused ghcr.io/nowjon/habitica images..."
-             sudo docker image prune -af --filter "reference=ghcr.io/nowjon/habitica*"
+             # image prune does not support a reference filter; remove unused
+             # repo images by ID, then clear dangling layers.
+             sudo docker images ghcr.io/nowjon/habitica --format "{{.ID}}" | sort -u | while read -r id; do
+               if [ -z "$(sudo docker ps -aq --filter "ancestor=${id}")" ]; then
+                 sudo docker rmi -f "${id}" || true
+               fi
+             done
+             sudo docker image prune -f
              echo "habitica image prune complete"'

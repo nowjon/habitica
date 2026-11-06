@@ -12,7 +12,7 @@ When a feature/fix is ready, do **all** of the following before ending the sessi
 4. **Confirm the site is up**:
    - `GET https://habitica.best-villamil.com/api/v3/status` → `{"success":true,"data":{"status":"up"},...}`
    - Homepage `https://habitica.best-villamil.com/` → HTTP 200
-5. **Confirm image prune ran**: the deploy job prunes unused `ghcr.io/nowjon/habitica*` images on vm-apps after a healthy recreate. Check the deploy job log for the prune step / success; do not skip reporting this.
+5. **Confirm image prune ran**: after a healthy recreate, the deploy job removes unused `ghcr.io/nowjon/habitica` images on vm-apps (by image ID; Docker’s `image prune` has no `reference` filter) and prunes dangling layers. Check the deploy log for `habitica image prune complete`.
 6. **Report** merge link, deploy run link, site health, and prune confirmation in the user-facing summary.
 
 ## Deploy reference
