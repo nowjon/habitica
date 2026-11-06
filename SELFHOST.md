@@ -5,6 +5,8 @@ Fork of [awinterstein/habitica](https://github.com/awinterstein/habitica) for th
 - Image: `ghcr.io/nowjon/habitica:main` (Dockerfile `server` target)
 - CI: `.github/workflows/build-and-deploy.yml` builds on GitHub-hosted runners, then deploys from the **self-hosted** `vm-agent-habitica` runner (labels `homelab,habitica-deploy`) over SSH via Aristaeus → vm-apps
 - Deploy stack path on vm-apps: `/opt/stacks/habitica` (managed by homelab-ops Ansible role `habitica`)
+- Public URL: https://habitica.best-villamil.com
+- Status: https://habitica.best-villamil.com/api/v3/status
 
 ## Secrets / vars
 
@@ -18,6 +20,19 @@ Fork of [awinterstein/habitica](https://github.com/awinterstein/habitica) for th
 
 `TS_AUTHKEY` is unused by the current deploy path (kept only if you re-enable github-hosted Tailscale deploy).
 
-## Customize
+## Customize / agent close-out
 
-Branch from `main`, open a PR, merge. Image rebuild + redeploy follow automatically.
+Branch from `main`, open a PR, **auto-merge** when ready. Image rebuild + redeploy follow automatically.
+
+Agents (see `AGENTS.md` and `.cursor/rules/post-merge-deploy.mdc`) must complete this loop every time:
+
+1. Squash-merge the PR into `main`
+2. Confirm `Build and Deploy` succeeds on `main`
+3. Confirm https://habitica.best-villamil.com is up (`/api/v3/status` → `up`)
+4. Confirm unused Habitica images were pruned on vm-apps (deploy job runs `docker image prune` for `ghcr.io/nowjon/habitica*`)
+
+### Deploy steps on vm-apps (summary)
+
+1. `docker compose pull` + `up -d --force-recreate server` in `/opt/stacks/habitica`
+2. Poll `http://127.0.0.1:3070/api/v3/status` until healthy
+3. Prune unused `ghcr.io/nowjon/habitica*` images
