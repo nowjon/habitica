@@ -63,6 +63,7 @@
             :text="`${$t('text')}*`"
           />
           <div
+            v-if="showSpiWarning"
             id="spi-alert"
             class="d-flex align-items-center"
             :class="cssClass('headings')"
@@ -100,6 +101,7 @@
         >
       </div>
       <b-popover
+        v-if="showSpiWarning"
         :target="'spi-alert'"
         triggers="hover"
         placement="bottom"
@@ -286,7 +288,7 @@
             />
             <information-icon
               tooltip-id="disableHealthPenaltyHelp"
-              :tooltip="$t('disableHealthPenaltyHelp')"
+              :tooltip="healthPenaltyHelpText"
             />
           </div>
         </div>
@@ -1577,8 +1579,18 @@ export default {
         && this.user.preferences.automaticAllocation === true
         && this.user.preferences.allocationMode === 'taskbased';
     },
+    showSpiWarning () {
+      return this.task && this.task.type !== 'habit' && this.task.type !== 'daily';
+    },
     showHealthPenaltyOption () {
       return this.task && (this.task.type === 'habit' || this.task.type === 'daily');
+    },
+    healthPenaltyHelpText () {
+      if (!this.task) return '';
+      if (this.task.type === 'habit') {
+        return this.$t('disableHealthPenaltyHelpHabit');
+      }
+      return this.$t('disableHealthPenaltyHelpDaily');
     },
     healthPenaltyInputId () {
       return `disable-health-penalty-${this.purpose}`;
