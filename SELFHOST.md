@@ -29,10 +29,10 @@ Agents (see `AGENTS.md` and `.cursor/rules/post-merge-deploy.mdc`) must complete
 1. Squash-merge the PR into `main`
 2. Confirm `Build and Deploy` succeeds on `main`
 3. Confirm https://habitica.best-villamil.com is up (`/api/v3/status` → `up`)
-4. Confirm unused Habitica images were pruned on vm-apps (deploy job runs `docker image prune` for `ghcr.io/nowjon/habitica*`)
+4. Confirm unused Habitica images were pruned on vm-apps (deploy job removes unused `ghcr.io/nowjon/habitica` images by ID, then dangling prune)
 
 ### Deploy steps on vm-apps (summary)
 
 1. `docker compose pull` + `up -d --force-recreate server` in `/opt/stacks/habitica`
 2. Poll `http://127.0.0.1:3070/api/v3/status` until healthy
-3. Prune unused `ghcr.io/nowjon/habitica*` images
+3. Remove unused `ghcr.io/nowjon/habitica` images (by ID) and prune dangling layers
