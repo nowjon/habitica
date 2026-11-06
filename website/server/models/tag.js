@@ -15,6 +15,9 @@ export const schema = new Schema({
   name: { $type: String, required: true },
   challenge: { $type: Boolean },
   group: { $type: String },
+  // Outline styling applied to tasks that use this tag
+  outlineColor: { $type: String, default: null },
+  outlineWidth: { $type: Number, default: 0 },
 }, {
   strict: true,
   minimize: false, // So empty objects are returned

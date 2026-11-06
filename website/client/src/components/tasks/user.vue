@@ -17,8 +17,19 @@
     />
     <div class="col-12">
       <div class="row tasks-navigation">
-        <div class="col-12 col-md-4 offset-md-4">
+        <div class="col-12 col-md-5 offset-md-3">
           <div class="d-flex">
+            <button
+              class="btn btn-secondary mr-2 d-flex align-items-center tag-management-button"
+              type="button"
+              @click="openTagManagement()"
+            >
+              <div
+                class="svg-icon filter-icon mr-2"
+                v-html="icons.tags"
+              ></div>
+              <span v-once>{{ $t('tagManagement') }}</span>
+            </button>
             <input
               v-model="searchText"
               class="form-control input-search"
@@ -276,6 +287,7 @@
       </div>
     </div>
     <spells />
+    <tag-management-modal />
   </div>
 </template>
 
@@ -296,6 +308,11 @@
   .filter-icon {
     width: 16px;
     height: 16px;
+  }
+
+  .tag-management-button {
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .filter-panel {
@@ -442,11 +459,13 @@ import taskDefaults from '@/../../common/script/libs/taskDefaults';
 import TaskColumn from './column';
 import TaskModal from './taskModal';
 import TaskSummary from './taskSummary';
+import TagManagementModal from './tagManagementModal';
 import spells from './spells';
 import markdown from '@/directives/markdown';
 
 import positiveIcon from '@/assets/svg/positive.svg?raw';
 import filterIcon from '@/assets/svg/filter.svg?raw';
+import tagsIcon from '@/assets/svg/tags.svg?raw';
 import deleteIcon from '@/assets/svg/delete.svg?raw';
 import habitIcon from '@/assets/svg/habit.svg?raw';
 import dailyIcon from '@/assets/svg/daily.svg?raw';
@@ -464,6 +483,7 @@ export default {
     TaskColumn,
     TaskModal,
     TaskSummary,
+    TagManagementModal,
     spells,
     brokenTaskModal,
     draggable,
@@ -483,6 +503,7 @@ export default {
       icons: Object.freeze({
         positive: positiveIcon,
         filter: filterIcon,
+        tags: tagsIcon,
         destroy: deleteIcon,
         habit: habitIcon,
         daily: dailyIcon,
@@ -729,6 +750,9 @@ export default {
     },
     openBuyDialog (item) {
       this.$root.$emit('buyModal::showItem', item);
+    },
+    openTagManagement () {
+      this.$root.$emit('bv::show::modal', 'tag-management-modal');
     },
   },
 };

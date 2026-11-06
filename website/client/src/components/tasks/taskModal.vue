@@ -62,24 +62,6 @@
             :locked="challengeAccessRequired"
             :text="`${$t('text')}*`"
           />
-          <div
-            v-if="showSpiWarning"
-            id="spi-alert"
-            class="d-flex align-items-center"
-            :class="cssClass('headings')"
-          >
-            <div
-              class="svg svg-icon color icon-16 mr-1"
-              v-html="icons.alert"
-            ></div>
-            <small
-              class="my-1"
-            >
-              <a
-                :class="cssClass('headings')"
-              >{{ $t('avoidSPI') }}</a>
-            </small>
-          </div>
         </div>
         <input
           ref="inputToFocus"
@@ -100,17 +82,6 @@
           @keydown.esc="autoCompleteMixinHandleEscape($event)"
         >
       </div>
-      <b-popover
-        v-if="showSpiWarning"
-        :target="'spi-alert'"
-        triggers="hover"
-        placement="bottom"
-        offset="-128"
-      >
-        <div
-          v-html="$t('avoidSPIDetails', spiLinkData)">
-        </div>
-      </b-popover>
       <div
         class="form-group mb-0"
       >
@@ -1390,11 +1361,6 @@ export default {
         { key: 'per', label: 'perception', description: 'perTaskText' },
       ],
       calendarHighlights: { dates: [new Date()] },
-      spiLinkData: {
-        firstLink: '<a href="/static/privacy#section_1" target="_blank" rel="noopener noreferrer">',
-        secondLink: '<a href="/static/privacy" target="_blank" rel="noopener noreferrer">',
-        linkClose: '</a>',
-      },
       taskValue: 0,
     };
   },
@@ -1578,9 +1544,6 @@ export default {
         && !this.groupId
         && this.user.preferences.automaticAllocation === true
         && this.user.preferences.allocationMode === 'taskbased';
-    },
-    showSpiWarning () {
-      return this.task && this.task.type !== 'habit' && this.task.type !== 'daily';
     },
     showHealthPenaltyOption () {
       return this.task && (this.task.type === 'habit' || this.task.type === 'daily');

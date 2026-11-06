@@ -25,4 +25,19 @@ describe('PUT /tags/:tagId', () => {
     expect(createdTag.name).to.equal(updatedTagName);
     expect(createdTag.ignored).to.not.exist;
   });
+
+  it('updates outline color and width for a tag', async () => {
+    const createdTag = await user.post('/tags', { name: 'Outlined Tag' });
+    const updatedTag = await user.put(`/tags/${createdTag.id}`, {
+      outlineColor: '#FF5500',
+      outlineWidth: 3,
+    });
+
+    expect(updatedTag.outlineColor).to.equal('#FF5500');
+    expect(updatedTag.outlineWidth).to.equal(3);
+
+    const fetchedTag = await user.get(`/tags/${createdTag.id}`);
+    expect(fetchedTag.outlineColor).to.equal('#FF5500');
+    expect(fetchedTag.outlineWidth).to.equal(3);
+  });
 });

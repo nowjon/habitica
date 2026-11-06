@@ -10,8 +10,10 @@
         'task-not-editable': !teamManagerAccess,
         'task-not-scoreable': showTaskLockIcon,
         'link-exempt': !isChallengeTask && !isGroupTask,
+        'has-tag-outline': Boolean(tagOutlineStyle.outline),
       }, `type_${task.type}`
       ]"
+      :style="tagOutlineStyle"
       @click="castEnd($event, task)"
       tabindex="0"
       @keypress.enter="$emit('editTask', task)"
@@ -461,14 +463,20 @@
     }
   }
 
-  .task:not(.groupTask) {
+  .task:not(.groupTask):not(.has-tag-outline) {
     &:hover, &:focus {
       border: none;
       outline: 1px solid $purple-400;
     }
   }
 
-  .task.groupTask {
+  .task.has-tag-outline {
+    &:hover, &:focus {
+      border: none;
+    }
+  }
+
+  .task.groupTask:not(.has-tag-outline) {
     &:hover:not(.task-not-editable.task-not-scoreable),
     &:focus-within:not(.task-not-editable.task-not-scoreable) {
       border: $purple-400 solid 1px;
@@ -1036,6 +1044,23 @@ export default {
     },
     hasTags () {
       return this.task.tags && this.task.tags.length > 0;
+    },
+    tagOutlineStyle () {
+      if (!this.hasTags || !this.user || !this.user.tags) return {};
+
+      const matchingTag = this.user.tags.find(tag => {
+        if (!tag || this.task.tags.indexOf(tag.id) === -1) return false;
+        const width = Number(tag.outlineWidth) || 0;
+        return width > 0 && Boolean(tag.outlineColor);
+      });
+
+      if (!matchingTag) return {};
+
+      const width = Math.max(0, Math.min(8, Number(matchingTag.outlineWidth) || 0));
+      return {
+        outline: `${width}px solid ${matchingTag.outlineColor}`,
+        outlineOffset: '0px',
+      };
     },
     shortName () {
       if (this.task.challenge.broken) return '';
