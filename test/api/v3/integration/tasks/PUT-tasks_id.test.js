@@ -340,6 +340,14 @@ describe('PUT /tasks/:id', () => {
       expect(savedHabit.up).to.eql(false);
       expect(savedHabit.down).to.eql(false);
     });
+
+    it('can disable the health penalty', async () => {
+      const savedHabit = await user.put(`/tasks/${habit._id}`, {
+        disableHealthPenalty: true,
+      });
+
+      expect(savedHabit.disableHealthPenalty).to.equal(true);
+    });
   });
 
   context('todos', () => {
@@ -425,6 +433,14 @@ describe('PUT /tasks/:id', () => {
       expect(savedDaily.isDue).to.be.false;
       expect(savedDaily.nextDue.length).to.eql(6);
       expect(savedDaily.yesterDaily).to.be.false;
+    });
+
+    it('can disable the health penalty', async () => {
+      const savedDaily = await user.put(`/tasks/${daily._id}`, {
+        disableHealthPenalty: true,
+      });
+
+      expect(savedDaily.disableHealthPenalty).to.equal(true);
     });
 
     it('can update checklists (replace it)', async () => {
