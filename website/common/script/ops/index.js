@@ -28,7 +28,11 @@ import changeClass from './changeClass';
 import disableClasses from './disableClasses';
 import readCard from './readCard';
 import openMysteryItem from './openMysteryItem';
-import scoreTask from './scoreTask';
+import scoreTask, {
+  applyChecklistRewardDiff,
+  canAwardChecklistEdit,
+  scoreChecklistItem,
+} from './scoreTask';
 import markPmsRead from './markPMSRead';
 import * as pinnedGearUtils from './pinnedGearUtils';
 import { unEquipByType } from './unequip';
@@ -65,6 +69,9 @@ export default {
   readCard,
   openMysteryItem,
   scoreTask,
+  scoreChecklistItem,
+  applyChecklistRewardDiff,
+  canAwardChecklistEdit,
   markPmsRead,
   pinnedGearUtils,
   unEquipByType,

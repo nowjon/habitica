@@ -740,7 +740,9 @@ export default {
               || (task.notes && task.notes.toLowerCase().indexOf(searchTextLowerCase) > -1)
               || (task.checklist && task.checklist.length > 0
                 && task.checklist
-                  .some(checkItem => checkItem.text.toLowerCase().indexOf(searchTextLowerCase) > -1))
+                  .some(checkItem => checkItem.text.toLowerCase().indexOf(searchTextLowerCase) > -1
+                    || (checkItem.notes
+                      && checkItem.notes.toLowerCase().indexOf(searchTextLowerCase) > -1)))
             ),
           /* eslint-enable no-extra-parens, implicit-arrow-linebreak, max-len */
         );

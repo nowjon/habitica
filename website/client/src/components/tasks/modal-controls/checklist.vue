@@ -29,51 +29,91 @@
         <div
           v-for="(item, $index) in checklist"
           :key="item.id"
-          class="inline-edit-input-group checklist-group input-group"
+          class="checklist-entry"
         >
-          <span
-            v-if="!disabled && !disableDrag"
-            class="grippy"
-            v-html="icons.grip"
-          >
-          </span>
-
-          <checkbox
-            v-if="!disableEdit"
-            :id="`checklist-${item.id}`"
-            :checked.sync="item.completed"
-            :disabled="disabled"
-            class="input-group-prepend"
-            :class="{'cursor-auto': disabled}"
-          />
-
-          <input
-            :ref="'checklistItem-' + $index"
-            v-model="item.text"
-            class="inline-edit-input checklist-item form-control"
-            type="text"
-            :disabled="disabled || disableEdit"
-            :class="summaryClass(item)"
-            @focus="setActiveItem($index)"
-            @keydown="autoCompleteMixinUpdateCarretPosition"
-            @keydown.tab="autoCompleteMixinHandleTab($event)"
-            @keydown.up="autoCompleteMixinSelectPreviousAutocomplete($event)"
-            @keydown.down="autoCompleteMixinSelectNextAutocomplete($event)"
-            @keypress.enter="autoCompleteMixinSelectAutocomplete($event)"
-            @keydown.esc="autoCompleteMixinHandleEscape($event)"
-          >
-          <span
-            v-if="!disabled && !disableEdit"
-            class="input-group-append"
-            @click="removeChecklistItem($index)"
-          >
-            <div
-              v-once
-              class="svg-icon destroy-icon"
-              v-html="icons.destroy"
+          <div class="inline-edit-input-group checklist-group input-group">
+            <span
+              v-if="!disabled && !disableDrag"
+              class="grippy"
+              v-html="icons.grip"
             >
-            </div>
-          </span>
+            </span>
+
+            <checkbox
+              v-if="!disableEdit"
+              :id="`checklist-${item.id}`"
+              :checked.sync="item.completed"
+              :disabled="disabled"
+              class="input-group-prepend"
+              :class="{'cursor-auto': disabled}"
+            />
+
+            <input
+              :ref="'checklistItem-' + $index"
+              v-model="item.text"
+              class="inline-edit-input checklist-item form-control"
+              type="text"
+              :disabled="disabled || disableEdit"
+              :class="summaryClass(item)"
+              @focus="setActiveItem($index)"
+              @keydown="autoCompleteMixinUpdateCarretPosition"
+              @keydown.tab="autoCompleteMixinHandleTab($event)"
+              @keydown.up="autoCompleteMixinSelectPreviousAutocomplete($event)"
+              @keydown.down="autoCompleteMixinSelectNextAutocomplete($event)"
+              @keypress.enter="autoCompleteMixinSelectAutocomplete($event)"
+              @keydown.esc="autoCompleteMixinHandleEscape($event)"
+            >
+            <span
+              v-if="!disabled && !disableEdit"
+              class="input-group-append"
+              @click="removeChecklistItem($index)"
+            >
+              <div
+                v-once
+                class="svg-icon destroy-icon"
+                v-html="icons.destroy"
+              >
+              </div>
+            </span>
+          </div>
+          <div
+            v-if="taskType === 'todo'"
+            class="checklist-item-extras"
+          >
+            <template v-if="!disableEdit">
+              <div class="checklist-extra-label">
+                {{ $t('difficulty') }}
+              </div>
+              <select-difficulty
+                :value="itemPriority(item)"
+                :disabled="disabled"
+                @select="setItemPriority(item, $event)"
+              />
+              <div class="checklist-extra-label">
+                {{ $t('notes') }}
+              </div>
+              <textarea
+                v-model="item.notes"
+                class="checklist-notes"
+                rows="2"
+                :disabled="disabled"
+                :placeholder="$t('addNotes')"
+              ></textarea>
+            </template>
+            <template v-else>
+              <div
+                class="checklist-difficulty-readonly"
+                :class="difficultyClass(item)"
+              >
+                {{ difficultyLabel(item) }}
+              </div>
+              <div
+                v-if="item.notes"
+                v-markdown="item.notes"
+                class="checklist-notes-readonly"
+              ></div>
+            </template>
+          </div>
         </div>
       </draggable>
       <div
@@ -127,8 +167,10 @@ import deleteIcon from '@/assets/svg/delete.svg?raw';
 import chevronIcon from '@/assets/svg/chevron.svg?raw';
 import gripIcon from '@/assets/svg/grip.svg?raw';
 import checkbox from '@/components/ui/checkbox';
+import selectDifficulty from '@/components/tasks/modal-controls/selectDifficulty';
 import lockableLabel from './lockableLabel';
 import emojiAutoComplete from '@/components/chat/emojiAutoComplete';
+import markdownDirective from '@/directives/markdown';
 import { autoCompleteHelperMixin } from '@/mixins/autoCompleteHelper';
 
 export default {
@@ -138,6 +180,10 @@ export default {
     draggable,
     lockableLabel,
     emojiAutoComplete,
+    selectDifficulty,
+  },
+  directives: {
+    markdown: markdownDirective,
   },
   mixins: [autoCompleteHelperMixin],
   props: {
@@ -152,6 +198,10 @@ export default {
     },
     items: {
       type: Array,
+    },
+    taskType: {
+      type: String,
+      default: '',
     },
   },
   data () {
@@ -185,6 +235,30 @@ export default {
       if (item.completed) return 'summary-completed';
       return 'summary-incomplete';
     },
+    itemPriority (item) {
+      const value = Number(item && item.priority);
+      if (Math.abs(value - 0.1) < 0.001) return 0.1;
+      if (Math.abs(value - 1.5) < 0.001) return 1.5;
+      if (Math.abs(value - 2) < 0.001) return 2;
+      return 1;
+    },
+    difficultyKey (item) {
+      const value = this.itemPriority(item);
+      if (value === 0.1) return 'trivial';
+      if (value === 1.5) return 'medium';
+      if (value === 2) return 'hard';
+      return 'easy';
+    },
+    difficultyLabel (item) {
+      return this.$t(this.difficultyKey(item));
+    },
+    difficultyClass (item) {
+      return `difficulty-${this.difficultyKey(item)}`;
+    },
+    setItemPriority (item, priority) {
+      this.$set(item, 'priority', priority);
+      this.updateChecklist();
+    },
     updateChecklist () {
       this.$emit('update:items', this.checklist);
     },
@@ -207,6 +281,8 @@ export default {
         id: uuid(),
         text: newChecklistItemText,
         completed: false,
+        notes: '',
+        priority: 1,
       };
       this.checklist.push(checkListItem);
       this.newChecklistItem = null;
@@ -275,6 +351,72 @@ export default {
 
     .top-border {
       border-top: 1px solid $gray-500;
+    }
+
+    .checklist-entry {
+      position: relative;
+      border-bottom: 1px solid $gray-500;
+
+      &:first-of-type {
+        border-top: 1px solid $gray-500;
+      }
+    }
+
+    .checklist-item-extras {
+      padding: 0.25rem 0.75rem 0.75rem;
+
+      .checklist-extra-label {
+        margin: 0.5rem 0 0.25rem;
+        color: $gray-100;
+        font-size: 12px;
+        line-height: 1.33;
+      }
+
+      .checklist-notes {
+        width: 100%;
+        min-height: 3.25rem;
+        padding: 0.375rem 0.5rem;
+        border: 1px solid $gray-400;
+        border-radius: 2px;
+        color: $gray-50;
+        font-size: 14px;
+        line-height: 1.43;
+        resize: vertical;
+      }
+
+      .checklist-difficulty-readonly {
+        font-size: 12px;
+        font-weight: bold;
+        line-height: 1.33;
+        text-transform: uppercase;
+
+        &.difficulty-trivial {
+          color: $gray-200;
+        }
+
+        &.difficulty-easy {
+          color: $yellow-5;
+        }
+
+        &.difficulty-medium {
+          color: $orange-10;
+        }
+
+        &.difficulty-hard {
+          color: $red-10;
+        }
+      }
+
+      .checklist-notes-readonly {
+        margin-top: 0.25rem;
+        color: $gray-100;
+        font-size: 14px;
+        line-height: 1.43;
+
+        p {
+          margin-bottom: 0;
+        }
+      }
     }
 
     .checklist-group {
@@ -361,6 +503,14 @@ export default {
       &.summary-completed {
         text-decoration: line-through;
       }
+    }
+
+    .checklist-entry .checklist-group,
+    .checklist-entry .checklist-group:first-of-type {
+      border-top: none;
+      border-bottom: none;
+      height: auto;
+      min-height: 2rem;
     }
 
     .checklist-group {

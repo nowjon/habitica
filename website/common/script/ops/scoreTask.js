@@ -12,6 +12,7 @@ import updateStats from '../fns/updateStats';
 import crit from '../fns/crit';
 import getUtcOffset from '../fns/getUtcOffset';
 
+import { normalizeChecklistPriority } from '../libs/checklist';
 import statsComputed from '../libs/statsComputed';
 import { checkOnboardingStatus } from '../libs/onboarding';
 
@@ -35,20 +36,16 @@ function _calculateDelta (task, direction, cron) {
   const currVal = _getTaskValue(task.value);
   let nextDelta = (0.9747 ** currVal) * (direction === 'down' ? -1 : 1);
 
-  // Checklists
+  // Missed Dailies lose less Health when some checklist items were completed.
+  // To Do checklist items grant their own reward when checked, so they do not
+  // multiply the parent To Do.
   if (task.checklist && task.checklist.length > 0) {
-    // If the Daily, only dock them a portion based on their checklist completion
     if (direction === 'down' && task.type === 'daily' && cron) {
       nextDelta *= 1 - reduce(
         task.checklist,
         (m, i) => m + (i.completed ? 1 : 0),
         0,
       ) / task.checklist.length;
-    }
-
-    // If To Do, point-match the TD per checklist item completed
-    if (task.type === 'todo' && !cron) {
-      nextDelta *= 1 + reduce(task.checklist, (m, i) => m + (i.completed ? 1 : 0), 0);
     }
   }
 
@@ -82,14 +79,7 @@ function _calculateReverseDelta (task, direction) {
   // When we get close enough, return the difference between our approximated value
   // and the current value.  This will be the delta calculated from the original value
   // before the task was checked.
-  let nextDelta = testVal - currVal;
-
-  // Checklists - If To Do, point-match the TD per checklist item completed
-  if (task.checklist && task.checklist.length > 0 && task.type === 'todo') {
-    nextDelta *= 1 + reduce(task.checklist, (m, i) => m + (i.completed ? 1 : 0), 0);
-  }
-
-  return nextDelta;
+  return testVal - currVal;
 }
 
 function _gainMP (user, val) {
@@ -238,6 +228,113 @@ function _updateLastHistoryEntry (lastHistoryEntry, task, direction, times) {
   } else {
     lastHistoryEntry.scoredDown += times;
   }
+}
+
+function checklistHasRewardState (item) {
+  return Boolean(item.scoredPriority) || (typeof item.value === 'number' && item.value !== 0);
+}
+
+function checklistRewardPriority (item, direction) {
+  if (direction === 'down' && item.scoredPriority) {
+    return normalizeChecklistPriority(item.scoredPriority);
+  }
+  return normalizeChecklistPriority(item.priority);
+}
+
+// Personal tasks and group tasks can pay out. Challenge templates cannot.
+export function canAwardChecklistEdit (task, user) {
+  if (!task || task.type !== 'todo' || !user) return false;
+  if (task.challenge && task.challenge.id && !task.userId) return false;
+  if (task.userId && String(task.userId) !== String(user._id)) return false;
+  return true;
+}
+
+// Awards or removes Experience, Gold, and Mana for one To Do checklist item.
+// `item.completed` is the state after the check or uncheck.
+export function scoreChecklistItem ({ user, task, item } = {}) {
+  if (!user || !task || task.type !== 'todo' || !item || !user.stats) return 0;
+
+  const direction = item.completed ? 'up' : 'down';
+  // Items completed before this feature have no reward state. Unchecking them is free.
+  if (direction === 'down' && !checklistHasRewardState(item)) return 0;
+
+  const rewardTask = {
+    value: item.value || 0,
+    type: 'todo',
+    priority: checklistRewardPriority(item, direction),
+    checklist: [],
+    attribute: task.attribute,
+    streak: 0,
+  };
+
+  let delta;
+  if (direction === 'down') {
+    rewardTask.value += _calculateReverseDelta(rewardTask, direction);
+    item.value = rewardTask.value;
+    delta = _calculateDelta(rewardTask, direction, false);
+  } else {
+    delta = _calculateDelta(rewardTask, direction, false);
+    rewardTask.value += delta;
+    item.value = rewardTask.value;
+    item.scoredPriority = rewardTask.priority;
+  }
+
+  const oldLeveledUp = user._tmp && user._tmp.leveledUp;
+  user._tmp = {};
+  if (oldLeveledUp) user._tmp.leveledUp = oldLeveledUp;
+
+  const _crit = direction === 'up' ? crit.crit(user) : 1;
+  if (_crit > 1) user._tmp.crit = _crit;
+
+  if (
+    direction === 'up'
+    && user.preferences
+    && user.preferences.automaticAllocation === true
+    && user.preferences.allocationMode === 'taskbased'
+    && user.stats.training
+  ) {
+    const attribute = ['str', 'con', 'int', 'per'].includes(task.attribute) ? task.attribute : 'str';
+    user.stats.training[attribute] += delta;
+  }
+
+  const stats = {
+    gp: user.stats.gp,
+    hp: user.stats.hp,
+    exp: user.stats.exp,
+  };
+
+  _addPoints(user, rewardTask, stats, direction, delta);
+  _gainMP(user, max([1, 0.01 * statsComputed(user).maxMP]) * (direction === 'down' ? -1 : 1));
+  updateStats(user, stats);
+
+  return delta;
+}
+
+// previousItems is the full checklist from before this edit. Pass [] when every
+// item is new. Completion changes award or remove that item's reward.
+export function applyChecklistRewardDiff (user, task, previousItems = []) {
+  if (!canAwardChecklistEdit(task, user) || !Array.isArray(task.checklist)) return false;
+
+  const previousById = {};
+  previousItems.forEach(previous => {
+    if (previous && previous.id) previousById[previous.id] = previous;
+  });
+
+  let changed = false;
+  task.checklist.forEach(item => {
+    if (!item) return;
+    const previous = previousById[item.id];
+    const wasCompleted = previous ? Boolean(previous.completed) : false;
+    item.value = previous && typeof previous.value === 'number' ? previous.value : 0;
+    item.scoredPriority = previous ? previous.scoredPriority : undefined;
+
+    if (Boolean(item.completed) !== wasCompleted) {
+      scoreChecklistItem({ user, task, item });
+      changed = true;
+    }
+  });
+
+  return changed;
 }
 
 export default function scoreTask (options = {}, req = {}) {
@@ -440,9 +537,8 @@ export default function scoreTask (options = {}, req = {}) {
       if (direction === 'down') delta = _calculateDelta(task, direction, cron); // recalculate delta for unchecking so the gp and exp come out correctly
       _addPoints(user, task, stats, direction, delta);
 
-      // MP++ per checklist item in ToDo, bonus per CLI
-      const multiplier = max([reduce(task.checklist, (m, i) => m + (i.completed ? 1 : 0), 1), 1]);
-      _gainMP(user, max([multiplier, 0.01 * statsComputed(user).maxMP * multiplier]) * (direction === 'down' ? -1 : 1));
+      // Checklist items grant their own mana when checked off.
+      _gainMP(user, max([1, 0.01 * statsComputed(user).maxMP]) * (direction === 'down' ? -1 : 1));
     }
   } else if (task.type === 'reward') {
     // Don't adjust values for rewards
