@@ -50,25 +50,10 @@
         />
         <!-- eslint-enable vue/no-use-v-if-with-v-for -->
       </div>
-      <div
+      <task-statistics
         v-else
-        class="no-party d-none d-md-flex justify-content-center text-center mr-4"
-      >
-        <div class="align-self-center">
-          <h3>{{ user.party._id ? $t('questWithOthers') : $t('battleWithFriends') }}</h3>
-          <span
-            class="small-text"
-            v-html="user.party._id ? $t('inviteFriendsParty') : $t('startPartyDetail')"
-          ></span>
-          <br>
-          <button
-            class="btn btn-primary"
-            @click="createOrInviteParty()"
-          >
-            {{ user.party._id ? $t('findPartyMembers') : $t('getStarted') }}
-          </button>
-        </div>
-      </div>
+        class="d-none d-md-flex"
+      />
     </div>
   </div>
 </template>
@@ -90,7 +75,7 @@
     display: none;
   }
 
-  .no-party, .party-members {
+  .party-members {
     flex-grow: 1;
   }
 
@@ -104,21 +89,6 @@
     background-image: linear-gradient(to right, rgba($purple-50, 0), $purple-50);
   }
 
-  .no-party {
-    .small-text {
-      color: $header-color;
-      flex-wrap: nowrap;
-    }
-
-    h3 {
-      color: $white;
-      margin-bottom: 4px;
-    }
-
-    .btn {
-      margin-top: 16px;
-    }
-  }
 </style>
 
 <script>
@@ -128,6 +98,7 @@ import MemberDetails from '../memberDetails';
 import createPartyModal from '../groups/createPartyModal';
 import inviteModal from '../groups/inviteModal';
 import membersModal from '../groups/membersModal';
+import TaskStatistics from './taskStatistics';
 import ResizeDirective from '@/directives/resize.directive';
 
 export default {
@@ -139,6 +110,7 @@ export default {
     createPartyModal,
     inviteModal,
     membersModal,
+    TaskStatistics,
   },
   data () {
     return {
@@ -234,13 +206,6 @@ export default {
         this.expandedMember = null;
       } else {
         this.expandedMember = memberId;
-      }
-    },
-    async createOrInviteParty () {
-      if (this.user.party._id) {
-        this.$router.push('/looking-for-party');
-      } else {
-        this.$root.$emit('bv::show::modal', 'create-party-modal');
       }
     },
     loadMembers (payload = null) {
