@@ -42,6 +42,7 @@
       </h2>
 
       <table class="table">
+        <dark-mode-setting />
         <language-setting />
         <date-format-setting />
         <day-start-adjustment-setting />
@@ -92,6 +93,7 @@ import ResetAccount from './settingRows/resetAccount';
 import DeleteAccount from './settingRows/deleteAccount';
 import { sharedInlineSettingStore } from './components/inlineSettingMixin';
 import LanguageSetting from './settingRows/languageSetting';
+import DarkModeSetting from './settingRows/darkModeSetting.vue';
 import DateFormatSetting from './settingRows/dateFormatSetting';
 import DayStartAdjustmentSetting from './settingRows/dayStartAdjustmentSetting.vue';
 import AudioThemeSetting from '@/pages/settings/settingRows/audioThemeSetting.vue';
@@ -112,6 +114,7 @@ export default {
     DayStartAdjustmentSetting,
     DateFormatSetting,
     LanguageSetting,
+    DarkModeSetting,
     DeleteAccount,
     ResetAccount,
     PasswordSetting,

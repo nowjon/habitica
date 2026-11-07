@@ -1,7 +1,7 @@
 <template>
   <div
     v-once
-    class="top-container mx-auto"
+    class="top-container static-white-page mx-auto"
   >
     <div class="main-text mr-4">
       <div class="title-details">
@@ -112,7 +112,6 @@ export default {
       section: this.$t('faq'),
       subSection: this.$t('contentReleaseChanges'),
     });
-    document.body.style.background = '#ffffff';
   },
 };
 </script>

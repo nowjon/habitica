@@ -15,6 +15,9 @@ import getStore from './store';
 import StoreModule from './libs/store';
 import './filters/registerGlobals';
 import i18n from './libs/i18n';
+import { initTheme, bindThemeToUser } from '@/libs/theme';
+
+initTheme();
 
 const IS_PRODUCTION = import.meta.env.NODE_ENV === 'production'; // eslint-disable-line no-process-env
 
@@ -40,6 +43,7 @@ Vue.use(CollapsePlugin);
 
 setUpLogging();
 const store = getStore();
+bindThemeToUser(store);
 
 if (import.meta.env.TIME_TRAVEL_ENABLED === 'true') {
   (async () => {

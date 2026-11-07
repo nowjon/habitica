@@ -12,6 +12,8 @@
     "americanEnglishGovern": "In the event of a discrepancy in the translations, the American English version governs.",
     "helpWithTranslation": "Are you interested in helping with the translation of Habitica? Great! Then visit <%= linkOpen %>Habitica's Weblate site<%= linkClose %>!",
     "stickyHeader": "Sticky header",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
     "newTaskEdit": "Open new tasks in edit mode",
     "reverseChatOrder": "Show chat messages in reverse order",
     "dontShowAgain": "Don't show this again",

@@ -41,6 +41,7 @@
             v-html="icons.sync"
           ></div>
         </a>
+        <theme-toggle class="item-with-icon" />
         <notification-menu class="item-with-icon" />
         <user-dropdown class="item-with-icon" />
       </div>
@@ -418,6 +419,7 @@
               v-html="icons.sync"
             ></div>
           </a>
+          <theme-toggle class="item-with-icon" />
           <notification-menu class="item-with-icon" />
           <user-dropdown class="item-with-icon" />
         </div>
@@ -789,6 +791,7 @@ import sendGiftModal from '@/components/payments/sendGiftModal';
 import selectUserModal from '@/components/payments/selectUserModal';
 import sync from '@/mixins/sync';
 import userDropdown from './userDropdown';
+import themeToggle from '@/components/ui/themeToggle.vue';
 import reportBug from '@/mixins/reportBug.js';
 import { userStateMixin } from '../../mixins/userState';
 
@@ -802,6 +805,7 @@ export default {
     sendGiftModal,
     selectUserModal,
     userDropdown,
+    themeToggle,
   },
   mixins: [sync, reportBug, userStateMixin],
   data () {
