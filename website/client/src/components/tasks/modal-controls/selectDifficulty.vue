@@ -8,6 +8,8 @@
       :value="selected"
       :hide-icon="true"
       :direct-select="true"
+      :boundary="boundary"
+      :popper-opts="popperOpts"
       @select="$emit('select', $event.value)"
     >
       <template #item="{ item, button }">
@@ -150,6 +152,14 @@ export default {
     },
     value: {
       type: Number,
+    },
+    boundary: {
+      type: String,
+      default: 'scrollParent',
+    },
+    popperOpts: {
+      type: Object,
+      default: () => ({}),
     },
   },
   data () {
