@@ -352,6 +352,10 @@ html[data-theme='dark'] #task-modal {
       color: $dark-muted;
     }
 
+    .checklist-items.is-scrollable {
+      scrollbar-color: #4a4458 transparent;
+    }
+
     .checklist-notes {
       background-color: $dark-input;
       color: $dark-text;

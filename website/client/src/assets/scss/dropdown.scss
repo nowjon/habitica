@@ -153,6 +153,14 @@
     overflow: scroll;
     max-height: 400px;
   }
+
+  // position:fixed menus are sized against the viewport, so 100% would
+  // stretch them across the screen. Match the toggle instead.
+  &.dropdown-menu-fixed .dropdown-menu.show {
+    min-width: 0 !important;
+    width: var(--dropdown-menu-width, 100%);
+    overflow: visible;
+  }
 }
 
 // selectList.vue items sizing

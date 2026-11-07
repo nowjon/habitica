@@ -2,12 +2,18 @@
   <div>
     <b-dropdown
       class="select-list"
-      :class="{'inline-dropdown':inlineDropdown}"
+      :class="{
+        'inline-dropdown': inlineDropdown,
+        'dropdown-menu-fixed': menuFixed,
+      }"
+      :boundary="boundary"
+      :popper-opts="popperOpts"
       :toggle-class="isOpened ? 'active' : null"
       :disabled="disabled"
       :right="right"
-      @show="isOpened = true"
-      @hide="isOpened = false"
+      @show="onMenuShow"
+      @shown="syncFixedMenuWidth"
+      @hide="onMenuHide"
     >
       <template #button-content>
         <slot
@@ -123,6 +129,14 @@ export default {
     placeholder: {
       type: String,
     },
+    boundary: {
+      type: String,
+      default: 'scrollParent',
+    },
+    popperOpts: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   data () {
     return {
@@ -140,8 +154,27 @@ export default {
       }
       return this.items.find(item => item === this.selected);
     },
+    menuFixed () {
+      return Boolean(this.popperOpts && this.popperOpts.positionFixed);
+    },
   },
   methods: {
+    onMenuShow () {
+      this.isOpened = true;
+      this.syncFixedMenuWidth();
+    },
+    onMenuHide () {
+      this.isOpened = false;
+    },
+    syncFixedMenuWidth () {
+      if (!this.menuFixed || !this.$el) return;
+      const toggle = this.$el.querySelector('.dropdown-toggle');
+      if (!toggle) return;
+      const width = Math.round(toggle.getBoundingClientRect().width);
+      if (width > 0) {
+        this.$el.style.setProperty('--dropdown-menu-width', `${width}px`);
+      }
+    },
     getKeyProp (item) {
       return this.keyProp ? item[this.keyProp] : item.key || item.identifier;
     },
