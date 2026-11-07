@@ -305,6 +305,69 @@ html[data-theme='dark'] #task-modal {
     border-color: #4a4458;
   }
 
+  // Checklist rows are inline editors, not boxed fields. A filled input
+  // reads as a black slab and clips long to-do item text.
+  .checklist-component {
+    .checklist-entry,
+    .checklist-group,
+    .top-border {
+      border-color: $dark-border;
+    }
+
+    .checklist-group {
+      background: transparent;
+    }
+
+    .checklist-group .checklist-item {
+      flex: 1 1 auto;
+      width: 1%;
+      min-width: 0;
+      background-color: transparent;
+      color: $dark-text;
+      box-shadow: none;
+    }
+
+    .checklist-extra-label,
+    .checklist-notes-readonly {
+      color: $dark-muted;
+    }
+
+    .checklist-notes {
+      background-color: $dark-input;
+      color: $dark-text;
+      border-color: #4a4458;
+    }
+  }
+
+  .select-multi {
+    .dropdown-toggle {
+      background-color: $dark-input;
+      color: $dark-text;
+      border-color: #4a4458;
+    }
+
+    .dropdown-header {
+      background-color: $dark-raised;
+      color: $dark-text;
+    }
+
+    .hint,
+    .addl-text {
+      color: $dark-muted;
+    }
+  }
+
+  .multi-list .multi-item,
+  .multi-list .multi-item.pill-invert {
+    background-color: #4a4168;
+    border: 1px solid #8b7cc4;
+
+    .multi-label,
+    .multi-label p {
+      color: $dark-heading;
+    }
+  }
+
   .option-item-box {
     background: $dark-raised;
   }
