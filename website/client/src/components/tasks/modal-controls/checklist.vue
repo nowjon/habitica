@@ -19,103 +19,111 @@
       id="checklistCollapse"
       v-model="showChecklist"
     >
-      <draggable
-        v-model="checklist"
-        handle=".grippy"
-        filter=".task-dropdown"
-        :disabled="disabled"
-        @update="updateChecklist"
+      <div
+        ref="checklistScroll"
+        class="checklist-items"
+        :class="{'is-scrollable': scrollsChecklist}"
       >
-        <div
-          v-for="(item, $index) in checklist"
-          :key="item.id"
-          class="checklist-entry"
+        <draggable
+          v-model="checklist"
+          handle=".grippy"
+          filter=".task-dropdown"
+          :disabled="disabled"
+          @update="updateChecklist"
         >
-          <div class="inline-edit-input-group checklist-group input-group">
-            <span
-              v-if="!disabled && !disableDrag"
-              class="grippy"
-              v-html="icons.grip"
-            >
-            </span>
-
-            <checkbox
-              v-if="!disableEdit"
-              :id="`checklist-${item.id}`"
-              :checked.sync="item.completed"
-              :disabled="disabled"
-              class="input-group-prepend"
-              :class="{'cursor-auto': disabled}"
-            />
-
-            <input
-              :ref="'checklistItem-' + $index"
-              v-model="item.text"
-              class="inline-edit-input checklist-item form-control"
-              type="text"
-              :disabled="disabled || disableEdit"
-              :class="summaryClass(item)"
-              @focus="setActiveItem($index)"
-              @keydown="autoCompleteMixinUpdateCarretPosition"
-              @keydown.tab="autoCompleteMixinHandleTab($event)"
-              @keydown.up="autoCompleteMixinSelectPreviousAutocomplete($event)"
-              @keydown.down="autoCompleteMixinSelectNextAutocomplete($event)"
-              @keypress.enter="autoCompleteMixinSelectAutocomplete($event)"
-              @keydown.esc="autoCompleteMixinHandleEscape($event)"
-            >
-            <span
-              v-if="!disabled && !disableEdit"
-              class="input-group-append"
-              @click="removeChecklistItem($index)"
-            >
-              <div
-                v-once
-                class="svg-icon destroy-icon"
-                v-html="icons.destroy"
-              >
-              </div>
-            </span>
-          </div>
           <div
-            v-if="taskType === 'todo'"
-            class="checklist-item-extras"
+            v-for="(item, $index) in checklist"
+            :key="item.id"
+            class="checklist-entry"
           >
-            <template v-if="!disableEdit">
-              <div class="checklist-extra-label">
-                {{ $t('difficulty') }}
-              </div>
-              <select-difficulty
-                :value="itemPriority(item)"
-                :disabled="disabled"
-                @select="setItemPriority(item, $event)"
-              />
-              <div class="checklist-extra-label">
-                {{ $t('notes') }}
-              </div>
-              <textarea
-                v-model="item.notes"
-                class="checklist-notes"
-                rows="2"
-                :disabled="disabled"
-                :placeholder="$t('addNotes')"
-              ></textarea>
-            </template>
-            <template v-else>
-              <div
-                class="checklist-difficulty-readonly"
-                :class="difficultyClass(item)"
+            <div class="inline-edit-input-group checklist-group input-group">
+              <span
+                v-if="!disabled && !disableDrag"
+                class="grippy"
+                v-html="icons.grip"
               >
-                {{ difficultyLabel(item) }}
-              </div>
-              <div
-                v-if="item.notes"
-                v-markdown="item.notes"
-                class="checklist-notes-readonly"
-              ></div>
-            </template>
+              </span>
+
+              <checkbox
+                v-if="!disableEdit"
+                :id="`checklist-${item.id}`"
+                :checked.sync="item.completed"
+                :disabled="disabled"
+                class="input-group-prepend"
+                :class="{'cursor-auto': disabled}"
+              />
+
+              <input
+                :ref="'checklistItem-' + $index"
+                v-model="item.text"
+                class="inline-edit-input checklist-item form-control"
+                type="text"
+                :disabled="disabled || disableEdit"
+                :class="summaryClass(item)"
+                @focus="setActiveItem($index)"
+                @keydown="autoCompleteMixinUpdateCarretPosition"
+                @keydown.tab="autoCompleteMixinHandleTab($event)"
+                @keydown.up="autoCompleteMixinSelectPreviousAutocomplete($event)"
+                @keydown.down="autoCompleteMixinSelectNextAutocomplete($event)"
+                @keypress.enter="autoCompleteMixinSelectAutocomplete($event)"
+                @keydown.esc="autoCompleteMixinHandleEscape($event)"
+              >
+              <span
+                v-if="!disabled && !disableEdit"
+                class="input-group-append"
+                @click="removeChecklistItem($index)"
+              >
+                <div
+                  v-once
+                  class="svg-icon destroy-icon"
+                  v-html="icons.destroy"
+                >
+                </div>
+              </span>
+            </div>
+            <div
+              v-if="taskType === 'todo'"
+              class="checklist-item-extras"
+            >
+              <template v-if="!disableEdit">
+                <div class="checklist-extra-label">
+                  {{ $t('difficulty') }}
+                </div>
+                <select-difficulty
+                  :value="itemPriority(item)"
+                  :disabled="disabled"
+                  boundary="viewport"
+                  :popper-opts="fixedMenuPopperOpts"
+                  @select="setItemPriority(item, $event)"
+                />
+                <div class="checklist-extra-label">
+                  {{ $t('notes') }}
+                </div>
+                <textarea
+                  v-model="item.notes"
+                  class="checklist-notes"
+                  rows="2"
+                  :disabled="disabled"
+                  :placeholder="$t('addNotes')"
+                ></textarea>
+              </template>
+              <template v-else>
+                <div
+                  class="checklist-difficulty-readonly"
+                  :class="difficultyClass(item)"
+                >
+                  {{ difficultyLabel(item) }}
+                </div>
+                <div
+                  v-if="item.notes"
+                  v-markdown="item.notes"
+                  class="checklist-notes-readonly"
+                ></div>
+              </template>
+            </div>
           </div>
-        </div>
-      </draggable>
+        </draggable>
+      </div>
       <div
         v-if="!disabled && !disableEdit"
         class="inline-edit-input-group checklist-group input-group new-checklist"
@@ -218,9 +226,14 @@ export default {
         chevron: chevronIcon,
         grip: gripIcon,
       }),
+      // Fixed menus escape the checklist scroller instead of being clipped.
+      fixedMenuPopperOpts: Object.freeze({ positionFixed: true }),
     };
   },
   computed: {
+    scrollsChecklist () {
+      return this.taskType === 'todo';
+    },
     activeFieldText () {
       if (this.activeItemIndex === -1) {
         return this.newChecklistItem || '';
@@ -288,6 +301,16 @@ export default {
       this.newChecklistItem = null;
       this.setHasPossibilityOfIMEConversion(true);
       this.updateChecklist();
+      this.$nextTick(() => {
+        const scroller = this.$refs.checklistScroll;
+        if (!scroller) return;
+        const entries = scroller.querySelectorAll('.checklist-entry');
+        const last = entries[entries.length - 1];
+        if (last && typeof last.scrollIntoView === 'function') {
+          last.scrollIntoView({ block: 'end' });
+        }
+        scroller.scrollTop = scroller.scrollHeight;
+      });
     },
     removeChecklistItem (i) {
       this.checklist.splice(i, 1);
@@ -351,6 +374,32 @@ export default {
 
     .top-border {
       border-top: 1px solid $gray-500;
+    }
+
+    // To-do rows include difficulty and notes, so a long list used to push
+    // the task's difficulty, due date, and tags off the modal. Keep the rows
+    // in their own scroller. 46rem reserves the header, the fields under the
+    // list, and the dialog margin. The list uses the space that is left, but
+    // never shrinks below one row; shorter windows scroll the modal instead.
+    .checklist-items.is-scrollable {
+      --checklist-scroll-floor: 15rem;
+      --checklist-scroll-ceiling: 36rem;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-padding-block: 0.25rem;
+      scrollbar-width: thin;
+      scrollbar-color: $gray-400 transparent;
+      max-height: var(--checklist-scroll-floor);
+      max-height: max(
+        var(--checklist-scroll-floor),
+        min(var(--checklist-scroll-ceiling), calc(100vh - 46rem))
+      );
+      // The drag handle hangs 15px left of the row. Inset the scroller by
+      // that amount so the handle stays inside the scrollport and the row
+      // text lines up with the add-item field.
+      margin-left: -15px;
+      padding-left: 15px;
     }
 
     .checklist-entry {
