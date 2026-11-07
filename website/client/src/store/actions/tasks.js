@@ -2,6 +2,7 @@ import axios from 'axios';
 import Vue from 'vue';
 import compact from 'lodash/compact';
 import omit from 'lodash/omit';
+import { applyChecklistRewardDiff } from '@/../../common/script/ops/scoreTask';
 import { loadAsyncResource } from '@/libs/asyncResource';
 import { CONSTANTS, getLocalSetting, setLocalSetting } from '@/libs/userlocalManager';
 
@@ -85,6 +86,30 @@ function sanitizeChecklist (task) {
   }
 }
 
+function snapshotChecklist (checklist = []) {
+  if (!Array.isArray(checklist)) return [];
+  return checklist.map(item => ({
+    id: item.id,
+    completed: Boolean(item.completed),
+    value: item.value,
+    scoredPriority: item.scoredPriority,
+  }));
+}
+
+function awardEditedChecklist (store, editedTask, originalTask, isCreate) {
+  let previous = null;
+  if (Array.isArray(editedTask._checklistRewardSnapshot)) {
+    previous = editedTask._checklistRewardSnapshot;
+  } else if (originalTask) {
+    previous = snapshotChecklist(originalTask.checklist);
+  } else if (isCreate) {
+    previous = [];
+  }
+  delete editedTask._checklistRewardSnapshot;
+  if (!previous) return;
+  applyChecklistRewardDiff(store.state.user.data, editedTask, previous);
+}
+
 // Supply an array to create multiple tasks
 export async function create (store, createdTask) {
   // Treat all create actions as if we are adding multiple tasks
@@ -95,6 +120,7 @@ export async function create (store, createdTask) {
     const list = store.state.tasks.data[type];
 
     sanitizeChecklist(t);
+    awardEditedChecklist(store, t, null, true);
 
     list.unshift(t);
     store.state.user.data.tasksOrder[type].unshift(t._id);
@@ -124,12 +150,12 @@ export async function save (store, editedTask) {
   const taskId = editedTask._id;
   const { type } = editedTask;
   const originalTask = store.state.tasks.data[`${type}s`].find(t => t._id === taskId);
-
   sanitizeChecklist(editedTask);
+  awardEditedChecklist(store, editedTask, originalTask, false);
 
   if (originalTask) Object.assign(originalTask, editedTask);
 
-  const taskDataToSend = omit(editedTask, ['history']);
+  const taskDataToSend = omit(editedTask, ['history', '_checklistRewardSnapshot']);
   const response = await axios.put(`/api/v4/tasks/${taskId}`, taskDataToSend);
   if (originalTask) Object.assign(originalTask, response.data.data);
 }

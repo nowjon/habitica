@@ -29,6 +29,16 @@ export default {
       if (this.task) {
         this.checklist = clone(this.task.checklist);
         this.taskValue = this.task.value;
+        // Captured once per open so checklist rewards use the pre-edit completion state.
+        if (!Array.isArray(this.task._checklistRewardSnapshot)) {
+          const checklist = Array.isArray(this.task.checklist) ? this.task.checklist : [];
+          this.$set(this.task, '_checklistRewardSnapshot', checklist.map(item => ({
+            id: item.id,
+            completed: Boolean(item.completed),
+            value: item.value,
+            scoredPriority: item.scoredPriority,
+          })));
+        }
       }
     },
   },

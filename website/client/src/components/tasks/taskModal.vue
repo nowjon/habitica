@@ -168,6 +168,7 @@
         >
           <checklist
             :items.sync="task.checklist"
+            :task-type="task.type"
           />
         </div>
         <div
