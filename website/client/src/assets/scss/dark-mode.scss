@@ -327,6 +327,26 @@ html[data-theme='dark'] #task-modal {
       box-shadow: none;
     }
 
+    .checklist-group .input-group-append,
+    .checklist-group .input-group-prepend {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .destroy-icon {
+      color: $dark-muted;
+
+      svg,
+      svg path {
+        fill: currentColor;
+      }
+    }
+
+    .checklist-group:hover .destroy-icon:hover {
+      color: #c92b2b;
+    }
+
     .checklist-extra-label,
     .checklist-notes-readonly {
       color: $dark-muted;
