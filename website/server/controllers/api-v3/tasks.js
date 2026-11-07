@@ -32,6 +32,25 @@ import {
 import common from '../../../common';
 import { apiError } from '../../libs/apiError';
 
+function snapshotChecklist (checklist = []) {
+  if (!Array.isArray(checklist)) return [];
+  return checklist.map(item => ({
+    id: item.id,
+    completed: Boolean(item.completed),
+    value: typeof item.value === 'number' ? item.value : 0,
+    scoredPriority: item.scoredPriority,
+  }));
+}
+
+async function saveChecklistRewards (user, task, previousItems) {
+  const shouldTouch = common.ops.canAwardChecklistEdit(task, user);
+  const awarded = common.ops.applyChecklistRewardDiff(user, task, previousItems);
+  // Value is restored even when completion did not change, so keep it on the task.
+  if (shouldTouch && task.markModified) task.markModified('checklist');
+  if (awarded) await user.save();
+  return awarded;
+}
+
 /**
  * @apiDefine TaskNotFound
  * @apiError (404) {NotFound} TaskNotFound The specified task could not be found.
@@ -627,6 +646,7 @@ api.updateTask = {
 
     // we have to convert task to an object because otherwise things
     // don't get merged correctly. Bad for performances?
+    const previousChecklist = snapshotChecklist(task.checklist);
     const [updatedTaskObj] = common.ops.updateTask(task.toObject(), req);
     // Sanitize differently user tasks linked to a challenge
     let sanitizedObj;
@@ -675,6 +695,7 @@ api.updateTask = {
     }
 
     setNextDue(task, user);
+    await saveChecklistRewards(user, task, previousChecklist);
     const savedTask = await task.save();
 
     res.respond(200, savedTask);
@@ -904,6 +925,10 @@ api.addChecklistItem = {
 
     const newCheckListItem = Tasks.Task.sanitizeChecklist(req.body);
     task.checklist.push(newCheckListItem);
+    const addedItem = task.checklist[task.checklist.length - 1];
+    if (addedItem && addedItem.completed) {
+      await saveChecklistRewards(user, task, snapshotChecklist(task.checklist.slice(0, -1)));
+    }
     const savedTask = await task.save();
 
     newCheckListItem.id = savedTask.checklist[savedTask.checklist.length - 1].id;
@@ -929,7 +954,7 @@ api.addChecklistItem = {
 api.scoreCheckListItem = {
   method: 'POST',
   url: '/tasks/:taskId/checklist/:itemId/score',
-  middlewares: [authWithHeaders({ leanUser: true, userFieldsToInclude: ['_id', 'guilds', 'party', 'webhooks'] })],
+  middlewares: [authWithHeaders()],
   async handler (req, res) {
     const { user } = res.locals;
 
@@ -955,6 +980,12 @@ api.scoreCheckListItem = {
 
     if (!item) throw new NotFound(res.t('checklistItemNotFound'));
     item.completed = !item.completed;
+    // To Do sub-items pay (or reclaim) their own difficulty reward immediately.
+    if (task.type === 'todo') {
+      common.ops.scoreChecklistItem({ user, task, item });
+      if (task.markModified) task.markModified('checklist');
+      await user.save();
+    }
     const savedTask = await task.save();
 
     res.respond(200, savedTask);
@@ -1015,7 +1046,10 @@ api.updateChecklistItem = {
     const item = find(task.checklist, { id: req.params.itemId });
     if (!item) throw new NotFound(res.t('checklistItemNotFound'));
 
+    const previousItems = snapshotChecklist(task.checklist);
+    // sanitizeChecklist strips value and scoredPriority so a text edit cannot reset them.
     merge(item, Tasks.Task.sanitizeChecklist(req.body));
+    await saveChecklistRewards(user, task, previousItems);
     const savedTask = await task.save();
 
     res.respond(200, savedTask);

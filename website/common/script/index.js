@@ -85,7 +85,12 @@ import releasePets from './ops/releasePets';
 import reroll from './ops/reroll';
 import reset from './ops/reset';
 import revive from './ops/revive';
-import scoreTask from './ops/scoreTask';
+import scoreTask, {
+  applyChecklistRewardDiff,
+  canAwardChecklistEdit,
+  scoreChecklistItem,
+} from './ops/scoreTask';
+import { normalizeChecklistPriority } from './libs/checklist';
 import sell from './ops/sell';
 import { sleep } from './ops/sleep';
 import allocate from './ops/stats/allocate';
@@ -151,6 +156,7 @@ api.updateStore = updateStore;
 api.inAppRewards = inAppRewards;
 api.uuid = uuid;
 api.taskDefaults = taskDefaults;
+api.normalizeChecklistPriority = normalizeChecklistPriority;
 api.percent = percent;
 api.gold = gold;
 api.silver = silver;
@@ -184,6 +190,9 @@ api.fns = {
 
 api.ops = {
   scoreTask,
+  scoreChecklistItem,
+  applyChecklistRewardDiff,
+  canAwardChecklistEdit,
   sleep,
   allocate,
   allocateBulk,

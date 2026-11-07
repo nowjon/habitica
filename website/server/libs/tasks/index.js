@@ -114,6 +114,16 @@ async function createTasks (req, res, options = {}) {
   // tasks with aliases need to be validated asynchronously
   await validateTaskAlias(toSave, res);
 
+  let awardedChecklist = false;
+  if (user) {
+    toSave.forEach(task => {
+      if (shared.ops.applyChecklistRewardDiff(user, task, [])) {
+        awardedChecklist = true;
+        if (task.markModified) task.markModified('checklist');
+      }
+    });
+  }
+
   // If all tasks are valid (this is why it's not in the previous .map()),
   // save everything, withough running validation again
   toSave = toSave.map(task => task.save({
@@ -124,6 +134,8 @@ async function createTasks (req, res, options = {}) {
 
   const tasks = await Promise.all(toSave);
   tasks.splice(0, 1); // Remove user, challenge, or group promise
+  // Group and challenge creates persist the owner, not the acting user.
+  if (awardedChecklist && owner !== user) await user.save();
   return tasks;
 }
 

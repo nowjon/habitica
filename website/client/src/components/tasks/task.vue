@@ -240,6 +240,21 @@
                 :class="{ 'cursor-auto': showTaskLockIcon }"
                 :for="`checklist-${item.id}-${random}`"
               ></label>
+              <div
+                v-if="task.type === 'todo' || item.notes"
+                class="checklist-item-details"
+              >
+                <span
+                  v-if="task.type === 'todo'"
+                  class="checklist-difficulty"
+                  :class="difficultyClass(item)"
+                >{{ difficultyLabel(item) }}</span>
+                <div
+                  v-if="item.notes"
+                  v-markdown="item.notes"
+                  class="checklist-item-notes"
+                ></div>
+              </div>
             </div>
           </div>
           <div class="icons small-text d-flex align-items-center">
@@ -676,7 +691,7 @@
     color: $gray-50;
     font-size: 14px;
     line-height: 1.43;
-    margin-bottom: -3px;
+    margin-bottom: 4px;
     min-height: 0px;
     width: 100%;
     margin-left: 0;
@@ -685,7 +700,53 @@
 
     &-done {
       color: $gray-300;
-      text-decoration: line-through;
+
+      .custom-control-label {
+        text-decoration: line-through;
+      }
+    }
+
+    .checklist-item-details {
+      margin-left: 1.75rem;
+    }
+
+    .checklist-difficulty {
+      display: inline-block;
+      margin-top: 1px;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      line-height: 1.2;
+      text-transform: uppercase;
+
+      &.difficulty-trivial {
+        color: $gray-200;
+      }
+
+      &.difficulty-easy {
+        color: $yellow-5;
+      }
+
+      &.difficulty-medium {
+        color: $orange-10;
+      }
+
+      &.difficulty-hard {
+        color: $red-10;
+      }
+    }
+
+    .checklist-item-notes {
+      color: $gray-100;
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 1.4;
+      margin-top: 2px;
+      text-decoration: none;
+
+      p {
+        margin-bottom: 0;
+      }
     }
 
     .custom-control-label::before, .custom-control-label::after {
@@ -910,6 +971,7 @@
 import moment from 'moment';
 import { v4 as uuid } from 'uuid';
 import isEmpty from 'lodash/isEmpty';
+import { scoreChecklistItem as awardChecklistItem } from '@/../../common/script/ops/scoreTask';
 import { mapState, mapGetters, mapActions } from '@/libs/store';
 
 import positiveIcon from '@/assets/svg/positive.svg?raw';
@@ -1137,9 +1199,35 @@ export default {
       collapseChecklist: 'tasks:collapseChecklist',
       destroyTask: 'tasks:destroy',
     }),
+    difficultyKey (item) {
+      const value = Number(item && item.priority);
+      if (Math.abs(value - 0.1) < 0.001) return 'trivial';
+      if (Math.abs(value - 1.5) < 0.001) return 'medium';
+      if (Math.abs(value - 2) < 0.001) return 'hard';
+      return 'easy';
+    },
+    difficultyLabel (item) {
+      return this.$t(this.difficultyKey(item));
+    },
+    difficultyClass (item) {
+      return `difficulty-${this.difficultyKey(item)}`;
+    },
     toggleChecklistItem (item) {
       if (this.castingSpell) return;
       item.completed = !item.completed; // @TODO this should go into the action?
+      if (this.task.type === 'todo') {
+        try {
+          awardChecklistItem({ user: this.user, task: this.task, item });
+          if (item.completed && this.user._tmp && this.user._tmp.crit) {
+            this.crit((this.user._tmp.crit * 100) - 100);
+          }
+          this.$root.$emit('playSound', item.completed ? 'Todo' : 'Minus_Habit');
+        } catch (err) {
+          item.completed = !item.completed;
+          this.text(err.message);
+          return;
+        }
+      }
       this.scoreChecklistItem({ taskId: this.task._id, itemId: item.id });
     },
     calculateTimeTillDue () {

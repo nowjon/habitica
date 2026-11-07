@@ -156,6 +156,21 @@ export const TaskSchema = new Schema({
   typeKey: '$type', // So that we can use fields named `type`
 }, discriminatorOptions));
 
+function sanitizeChecklistItemFields (checklistObj, removeId = true) {
+  if (!checklistObj || typeof checklistObj !== 'object') return checklistObj;
+  if (removeId) delete checklistObj.id;
+  // Reward progress is server-owned. Clients cannot set or reset it.
+  delete checklistObj.value;
+  delete checklistObj.scoredPriority;
+  if (Object.prototype.hasOwnProperty.call(checklistObj, 'priority')) {
+    checklistObj.priority = shared.normalizeChecklistPriority(checklistObj.priority);
+  }
+  if (Object.prototype.hasOwnProperty.call(checklistObj, 'notes')) {
+    checklistObj.notes = checklistObj.notes == null ? '' : String(checklistObj.notes);
+  }
+  return checklistObj;
+}
+
 TaskSchema.plugin(baseModel, {
   noSet: ['challenge', 'userId', 'completed', 'history', 'dateCompleted', '_legacyId', 'group', 'isDue', 'nextDue'],
   sanitizeTransform (taskObj) {
@@ -179,6 +194,12 @@ TaskSchema.plugin(baseModel, {
     // See https://github.com/HabitRPG/habitica-ios/commit/4cd05f80363502eb7652e057aa564c85546f7806
     if (taskObj.attribute === null) {
       taskObj.attribute = 'str';
+    }
+
+    if (Array.isArray(taskObj.checklist)) {
+      taskObj.checklist.forEach(item => {
+        sanitizeChecklistItemFields(item, false);
+      });
     }
 
     return taskObj;
@@ -275,8 +296,7 @@ TaskSchema.statics.sanitizeUserGroupTask = function sanitizeUserGroupTask (taskO
 
 // Sanitize checklist objects (disallowing id)
 TaskSchema.statics.sanitizeChecklist = function sanitizeChecklist (checklistObj) {
-  delete checklistObj.id;
-  return checklistObj;
+  return sanitizeChecklistItemFields(checklistObj, true);
 };
 
 // Sanitize reminder objects (disallowing id)
@@ -364,6 +384,21 @@ const dailyTodoSchema = () => ({
   checklist: [{
     completed: { $type: Boolean, default: false },
     text: { $type: String, required: false, default: '' }, // required:false because it can be empty on creation
+    notes: { $type: String, default: '' },
+    // Difficulty for this sub-item. To Do items grant their own reward from this value.
+    priority: {
+      $type: Number,
+      default: 1,
+      set: value => shared.normalizeChecklistPriority(value),
+      validate: [
+        val => [0.1, 1, 1.5, 2].indexOf(val) !== -1,
+        'Valid priority values are 0.1, 1, 1.5, 2.',
+      ],
+    },
+    // Task-value curve for this item's own reward. Not client-settable.
+    value: { $type: Number, default: 0 },
+    // Difficulty used when the item was checked, so unchecking removes that same reward.
+    scoredPriority: { $type: Number },
     _id: false,
     id: {
       $type: String, default: shared.uuid, required: true, validate: [v => validator.isUUID(v), 'Invalid uuid for task checklist item.'],

@@ -53,6 +53,7 @@
           :items.sync="task.checklist"
           :disable-drag="true"
           :disable-edit="true"
+          :task-type="task.type"
         />
       </div>
       <div
