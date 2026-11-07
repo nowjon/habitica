@@ -117,6 +117,7 @@
           </div>
         </li>
       </ul>
+      <theme-toggle class="static-theme-toggle" />
       <button
         v-if="$route.name !== 'home'"
         class="btn btn-primary pull-right"
@@ -148,6 +149,11 @@
   .home-header, .home-header .btn {
     font-family: 'Varela Round', sans-serif;
     font-weight: normal;
+  }
+
+  .static-theme-toggle {
+    margin-right: 12px;
+    color: $header-color;
   }
 
   .btn-primary.pull-right {
@@ -274,10 +280,14 @@
 
 <script>
 import habiticaLogo from '@/assets/svg/logo-horizontal.svg?raw';
+import ThemeToggle from '@/components/ui/themeToggle.vue';
 import purpleLogo from '@/assets/svg/logo-horizontal-purple.svg?raw';
 import melior from '@/assets/svg/melior.svg?raw';
 
 export default {
+  components: {
+    ThemeToggle,
+  },
   data () {
     return {
       icons: Object.freeze({

@@ -572,6 +572,8 @@ export const UserSchema = new Schema({
     dateFormat: { $type: String, enum: ['MM/dd/yyyy', 'dd/MM/yyyy', 'yyyy/MM/dd'], default: 'MM/dd/yyyy' },
     sleep: { $type: Boolean, default: false },
     stickyHeader: { $type: Boolean, default: true },
+    // unset until the player chooses; 'light' and 'dark' are explicit
+    darkMode: { $type: String, enum: ['light', 'dark'] },
     disableClasses: { $type: Boolean, default: false },
     newTaskEdit: { $type: Boolean, default: false },
     // not used anymore, now the current filter is saved in preferences.activeFilter

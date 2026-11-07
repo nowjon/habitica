@@ -1,6 +1,7 @@
 <template>
   <div
     id="app"
+    class="theme-app"
     :class="{
       'casting-spell': castingSpell,
     }"

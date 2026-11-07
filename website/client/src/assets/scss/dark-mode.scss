@@ -1,0 +1,358 @@
+// Dark theme. Colors are compiled into the light stylesheets, so this file
+// restyles the surfaces people actually look at while data-theme="dark" is set.
+// The purple navigation bar stays as-is.
+
+$dark-page: #16141c;
+$dark-raised: #221f29;
+$dark-card: #2c2836;
+$dark-card-hover: #352f40;
+$dark-input: #1e1b26;
+$dark-border: #3d3848;
+$dark-text: #e8e4f0;
+$dark-heading: #f4f1f8;
+$dark-muted: #b7b1c2;
+$dark-faint: #8e879a;
+$dark-link: #c4b5fd;
+
+@mixin dark-text {
+  color: $dark-text;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .page-header,
+  .sub-header {
+    color: $dark-heading;
+  }
+
+  .small-text {
+    color: $dark-muted;
+  }
+
+  a:not(.btn):not(.nav-link):not(.topbar-dropdown-item) {
+    color: $dark-link;
+  }
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  background: $dark-page;
+  scrollbar-color: #4a4458 $dark-page;
+
+  body {
+    background: $dark-page;
+    color: $dark-text;
+  }
+
+  ::selection {
+    background: #6133b4;
+    color: #fff;
+  }
+}
+
+html[data-theme='dark'] body:has(.static-white-page) {
+  background: $dark-page;
+}
+
+body:has(.static-white-page) {
+  background: #fff;
+}
+
+html[data-theme='dark'] .static-white-page {
+  @include dark-text;
+
+  .main-text .body-text,
+  .main-text h3,
+  .main-text h4 {
+    color: $dark-text;
+  }
+}
+
+html[data-theme='dark'] .theme-app {
+  @include dark-text;
+
+  #app-header h1,
+  #app-header h2,
+  #app-header h3,
+  #habitica-menu a {
+    color: #fff;
+  }
+
+  .standard-sidebar,
+  .tasks-list,
+  .group .items {
+    background: $dark-raised;
+  }
+
+  .task-content,
+  .item,
+  .card,
+  .seeker,
+  .filter-panel,
+  .list-group-item,
+  .buttons-wrapper .item-with-icon {
+    background: $dark-card;
+    color: $dark-text;
+  }
+
+  .filter-panel {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+    .tags-category {
+      border-bottom-color: $dark-border;
+    }
+  }
+
+  .task-notes,
+  .checklist-item,
+  .collapse-checklist,
+  .dropdown-icon {
+    color: $dark-muted;
+  }
+
+  .collapse-checklist {
+    background-color: $dark-raised;
+  }
+
+  h3.markdown,
+  .markdown h3,
+  .markdown h4 {
+    color: $dark-heading;
+  }
+
+  .markdown blockquote {
+    border-left-color: $dark-border;
+    color: $dark-muted;
+  }
+
+  .quick-add {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: $dark-text;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &:focus,
+    &:active {
+      background: $dark-input;
+      color: $dark-text;
+      border-color: #bda8ff;
+    }
+  }
+
+  .hr,
+  .loadmore-divider {
+    background-color: $dark-border;
+    border-color: $dark-border;
+  }
+
+  .hr-middle {
+    background-color: $dark-page;
+    color: $dark-muted;
+  }
+
+  .table {
+    color: $dark-text;
+
+    th,
+    td {
+      border-color: $dark-border;
+    }
+  }
+
+  .settings-label,
+  .settings-value {
+    color: $dark-text;
+  }
+}
+
+html[data-theme='dark'] .modal {
+  @include dark-text;
+}
+
+html[data-theme='dark'] .dropdown-menu {
+  background: $dark-card;
+  border: 1px solid $dark-border;
+  color: $dark-text;
+}
+
+html[data-theme='dark'] .dropdown-menu .dropdown-item,
+html[data-theme='dark'] .dropdown-menu:not(.user-dropdown) .dropdown-item {
+  color: $dark-text !important;
+}
+
+html[data-theme='dark'] .dropdown-menu .dropdown-item:hover,
+html[data-theme='dark'] .dropdown-menu .dropdown-item:focus {
+  background-color: rgba(189, 168, 255, 0.16) !important;
+  color: $dark-heading !important;
+}
+
+html[data-theme='dark'] .theme-app,
+html[data-theme='dark'] .modal {
+  input:not(.dark),
+  textarea:not(.dark),
+  select,
+  .form-control:not(.dark) {
+    background-color: $dark-input;
+    color: $dark-text;
+    border-color: #4a4458;
+
+    &::placeholder {
+      color: $dark-faint;
+    }
+
+    &:disabled {
+      background: $dark-raised;
+      color: $dark-muted;
+    }
+  }
+
+  input:not(.dark):-webkit-autofill,
+  textarea:not(.dark):-webkit-autofill,
+  .form-control:not(.dark):-webkit-autofill {
+    -webkit-text-fill-color: $dark-text;
+    box-shadow: 0 0 0 1000px $dark-input inset;
+    caret-color: $dark-text;
+  }
+
+  .input-group-text,
+  .input-group-append,
+  .input-group-prepend {
+    background-color: $dark-raised;
+    color: $dark-text;
+    border-color: #4a4458;
+  }
+
+  .custom-checkbox .custom-control-input:not(:checked):not(:disabled) ~ .custom-control-label::before {
+    background-color: $dark-card;
+    border-color: #6a6478;
+  }
+
+  .btn-secondary,
+  .dropdown > .btn-secondary.dropdown-toggle:not(.btn-success),
+  .show > .btn-secondary.dropdown-toggle:not(.btn-success) {
+    background: $dark-card;
+    color: $dark-text;
+    --icon-color: #{$dark-muted};
+
+    &:hover,
+    &:focus,
+    &:active,
+    &.active {
+      background: $dark-card-hover !important;
+      color: $dark-heading !important;
+      border-color: #bda8ff;
+    }
+  }
+
+  .dropdown > .btn-secondary.dropdown-toggle:not(.btn-success):not(:disabled):not(.disabled):hover,
+  .show > .btn-secondary.dropdown-toggle:not(.btn-success):not(:disabled):not(.disabled):hover,
+  .btn-secondary:not(:disabled):not(.disabled):hover {
+    background: $dark-card-hover !important;
+    color: $dark-heading !important;
+  }
+
+}
+
+html[data-theme='dark'] #habitica-menu .topbar-dropdown .dropdown-item,
+html[data-theme='dark'] #habitica-menu .topbar-dropdown .dropdown-item:hover {
+  color: #fff !important;
+}
+
+html[data-theme='dark'] .modal-content,
+html[data-theme='dark'] .modal-header,
+html[data-theme='dark'] .modal-body,
+html[data-theme='dark'] .modal-footer {
+  background: $dark-card;
+  color: $dark-text;
+  border-color: $dark-border;
+}
+
+html[data-theme='dark'] .modal-dialog .title {
+  color: $dark-heading;
+}
+
+html[data-theme='dark'] .modal-dialog .text {
+  color: $dark-muted;
+}
+
+html[data-theme='dark'] .modal-header .close {
+  color: $dark-text;
+  text-shadow: none;
+}
+
+html[data-theme='dark'] #task-modal {
+  .task-modal-content {
+    color: $dark-text;
+
+    label,
+    .option-item-label,
+    h3,
+    h4,
+    p {
+      color: $dark-text;
+    }
+  }
+
+  .task-modal-content input,
+  .task-modal-content textarea {
+    background-color: $dark-input;
+    color: $dark-text;
+    border-color: #4a4458;
+  }
+
+  .option-item-box {
+    background: $dark-raised;
+  }
+
+  .advanced-settings {
+    background-color: $dark-raised;
+
+    h3,
+    label {
+      color: $dark-text;
+    }
+  }
+
+  .task-modal-header .btn-secondary,
+  .task-modal-header .btn-secondary:hover,
+  .task-modal-header .btn-secondary:focus,
+  .task-modal-header .btn-secondary:active {
+    background: #fff !important;
+    color: #4e4a57 !important;
+    border-color: transparent;
+  }
+}
+
+html[data-theme='dark'] footer {
+  background-color: $dark-raised;
+  color: $dark-text;
+
+  a,
+  a:not([href]) {
+    color: $dark-link;
+  }
+
+  a:hover {
+    color: #fff;
+  }
+}
+
+html[data-theme='dark'] .bg-white {
+  background-color: $dark-card !important;
+}
+
+html[data-theme='dark'] .bg-gray-600,
+html[data-theme='dark'] .bg-gray-700 {
+  background-color: $dark-raised !important;
+}
+
+html[data-theme='dark'] code,
+html[data-theme='dark'] pre {
+  background: $dark-raised;
+  color: $dark-heading;
+}
