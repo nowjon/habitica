@@ -103,6 +103,26 @@ describe('PUT /user', () => {
       });
     });
 
+    it('updates the dark mode preference', async () => {
+      await user.put('/user', {
+        'preferences.darkMode': 'dark',
+      });
+
+      await user.sync();
+
+      expect(user.preferences.darkMode).to.eql('dark');
+    });
+
+    it('rejects an unknown dark mode value', async () => {
+      await expect(user.put('/user', {
+        'preferences.darkMode': 'blue',
+      })).to.eventually.be.rejected.and.eql({
+        code: 400,
+        error: 'BadRequest',
+        message: 'User validation failed',
+      });
+    });
+
     it('can set flags.newStuff to false', async () => {
       NewsPost.updateLastNewsPost({
         _id: '1234', publishDate: new Date(), title: 'Title', published: true,

@@ -1,5 +1,5 @@
 <template>
-  <div class="top-container mx-auto">
+  <div class="top-container static-white-page mx-auto">
     <div class="main-text mr-4">
       <!-- title goes here -->
       <div class="title-details">
@@ -190,7 +190,6 @@ export default {
     this.$store.dispatch('common:setTitle', {
       section: this.$t('sunsetFaqTitle'),
     });
-    document.body.style.background = '#ffffff';
   },
 };
 </script>

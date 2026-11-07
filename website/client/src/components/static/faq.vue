@@ -1,5 +1,5 @@
 <template>
-  <div class="top-container mx-auto">
+  <div class="top-container static-white-page mx-auto">
     <div class="main-text mr-4 col-8">
       <!-- title -->
       <div
@@ -103,7 +103,6 @@ export default {
       this.headings.push(entry.heading);
     }
     this.stillNeedHelp = this.faq.stillNeedHelp.web;
-    document.body.style.background = '#ffffff';
   },
   methods: {
     isVisible (heading) {
