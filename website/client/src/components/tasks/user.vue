@@ -39,7 +39,7 @@
             <button
               class="btn btn-secondary dropdown-toggle ml-2 d-flex align-items-center search-button"
               type="button"
-              :class="{active: selectedTags.length > 0 || hideRewards}"
+              :class="{active: selectedTags.length > 0 || hideRewards || showCompletedChecklist}"
               @click="toggleFilterPanel()"
             >
               <div
@@ -182,6 +182,33 @@
                         class="custom-control-label"
                         for="hide-rewards"
                       >{{ $t('hideRewards') }}</label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              v-if="!editingTags"
+              class="tags-category d-flex flex-column"
+            >
+              <div class="tags-header">
+                <strong v-once>{{ $t('todos') }}</strong>
+              </div>
+              <div class="tags-list container">
+                <div class="row no-gutters">
+                  <div class="col-12">
+                    <div class="custom-control custom-checkbox">
+                      <input
+                        id="show-completed-checklist"
+                        class="custom-control-input"
+                        type="checkbox"
+                        :checked="showCompletedChecklist"
+                        @change="toggleShowCompletedChecklist()"
+                      >
+                      <label
+                        class="custom-control-label"
+                        for="show-completed-checklist"
+                      >{{ $t('showCompletedSubtasksOption') }}</label>
                     </div>
                   </div>
                 </div>
@@ -530,6 +557,9 @@ export default {
     hideRewards () {
       return Boolean(this.user.preferences.tasks.hideRewards);
     },
+    showCompletedChecklist () {
+      return Boolean(this.user.preferences.tasks.showCompletedChecklist);
+    },
     columns () {
       if (this.hideRewards) {
         return this.taskTypes.filter(type => type !== 'reward');
@@ -746,6 +776,11 @@ export default {
     toggleHideRewards () {
       this.setUser({
         'preferences.tasks.hideRewards': !this.hideRewards,
+      });
+    },
+    toggleShowCompletedChecklist () {
+      this.setUser({
+        'preferences.tasks.showCompletedChecklist': !this.showCompletedChecklist,
       });
     },
     openBuyDialog (item) {

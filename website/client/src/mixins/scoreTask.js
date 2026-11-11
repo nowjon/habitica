@@ -33,14 +33,17 @@ export default {
           break;
       }
     },
-    async taskScore (task, direction) {
+    async taskScore (task, direction, scoreOptions = {}) {
       const { user } = this;
+      const completeChecklist = Boolean(scoreOptions.completeChecklist);
 
       const canScoreTask = await this.beforeTaskScore(task);
       if (!canScoreTask) return;
 
       try {
-        scoreTask({ task, user, direction });
+        scoreTask({
+          task, user, direction, completeChecklist,
+        });
       } catch (err) {
         this.text(err.message);
         return;
@@ -51,6 +54,7 @@ export default {
       const response = await this.$store.dispatch('tasks:score', {
         taskId: task._id,
         direction,
+        completeChecklist,
       });
 
       this.handleTaskScoreNotifications(response.data.data._tmp || {});

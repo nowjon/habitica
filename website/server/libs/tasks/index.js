@@ -485,7 +485,11 @@ async function scoreTask (user, task, direction, req, res) {
     }, req);
     await rollbackUser.save();
   } else {
-    delta = shared.ops.scoreTask({ task, user, direction }, req);
+    const completeChecklist = direction === 'up'
+      && String(req && req.query && req.query.completeChecklist) === 'true';
+    delta = shared.ops.scoreTask({
+      task, user, direction, completeChecklist,
+    }, req);
   }
   // Drop system (don't run on the client,
   // as it would only be discarded since ops are sent to the API, not the results)

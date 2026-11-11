@@ -88,6 +88,7 @@ import revive from './ops/revive';
 import scoreTask, {
   applyChecklistRewardDiff,
   canAwardChecklistEdit,
+  completeOpenChecklistItems,
   scoreChecklistItem,
 } from './ops/scoreTask';
 import { normalizeChecklistPriority } from './libs/checklist';
@@ -191,6 +192,7 @@ api.fns = {
 api.ops = {
   scoreTask,
   scoreChecklistItem,
+  completeOpenChecklistItems,
   applyChecklistRewardDiff,
   canAwardChecklistEdit,
   sleep,

@@ -197,7 +197,7 @@
             class="checklist"
             :class="{isOpen: !task.collapseChecklist}"
           >
-            <div class="d-inline-flex">
+            <div class="d-inline-flex align-items-center flex-wrap">
               <div
                 v-b-tooltip.hover.right="$t(`${task.collapseChecklist
                   ? 'expand': 'collapse'}Checklist`)"
@@ -214,10 +214,20 @@
                 ></div>
                 <span>{{ checklistProgress }}</span>
               </div>
+              <button
+                v-if="task.type === 'todo' && !task.collapseChecklist && completedChecklistCount > 0"
+                type="button"
+                class="show-completed-checklist mb-2"
+                @click.stop="toggleShowCompletedChecklist"
+              >
+                {{ showCompletedChecklist
+                  ? $t('hideCompletedSubtasks')
+                  : $t('showCompletedSubtasks', { count: completedChecklistCount }) }}
+              </button>
             </div>
             <!-- eslint-disable vue/no-use-v-if-with-v-for -->
             <div
-              v-for="item in task.checklist"
+              v-for="item in visibleChecklist"
               v-if="!task.collapseChecklist"
               :key="item.id"
               class="custom-control custom-checkbox checklist-item"
@@ -662,6 +672,23 @@
     margin-bottom: 2px;
   }
 
+  .show-completed-checklist {
+    margin-left: 8px;
+    padding: 2px 6px;
+    border: none;
+    border-radius: 1px;
+    background: transparent;
+    font-size: 10px;
+    line-height: 1.2;
+    color: $purple-300;
+    cursor: pointer;
+
+    &:hover,
+    &:focus {
+      text-decoration: underline;
+    }
+  }
+
   .collapse-checklist {
     padding: 2px 6px;
     border-radius: 1px;
@@ -1055,6 +1082,27 @@ export default {
     hasChecklist () {
       return this.task.checklist && this.task.checklist.length > 0;
     },
+    showCompletedChecklist () {
+      return Boolean(this.user
+        && this.user.preferences
+        && this.user.preferences.tasks
+        && this.user.preferences.tasks.showCompletedChecklist);
+    },
+    completedChecklistCount () {
+      if (!this.task.checklist) return 0;
+      return this.task.checklist.filter(item => item.completed).length;
+    },
+    incompleteChecklistCount () {
+      if (!this.task.checklist) return 0;
+      return this.task.checklist.filter(item => item && !item.completed).length;
+    },
+    visibleChecklist () {
+      if (!this.task.checklist) return [];
+      if (this.task.type === 'todo' && !this.showCompletedChecklist) {
+        return this.task.checklist.filter(item => item && !item.completed);
+      }
+      return this.task.checklist;
+    },
     canViewchecklist () {
       const userIsTaskUser = this.task.userId ? this.task.userId === this.user._id : true;
       return this.hasChecklist && userIsTaskUser;
@@ -1198,7 +1246,27 @@ export default {
       scoreChecklistItem: 'tasks:scoreChecklistItem',
       collapseChecklist: 'tasks:collapseChecklist',
       destroyTask: 'tasks:destroy',
+      setUser: 'user:set',
     }),
+    toggleShowCompletedChecklist () {
+      this.setUser({
+        'preferences.tasks.showCompletedChecklist': !this.showCompletedChecklist,
+      });
+    },
+    async confirmCompleteChecklist (direction) {
+      if (direction !== 'up' || this.task.type !== 'todo' || this.isGroupTask) return false;
+      const count = this.incompleteChecklistCount;
+      if (count < 1) return false;
+
+      const choice = await new Promise(resolve => {
+        this.$root.$emit('habitica:complete-checklist-confirm', {
+          count,
+          resolve,
+        });
+      });
+      if (choice === 'cancel') return null;
+      return choice === 'complete';
+    },
     difficultyKey (item) {
       const value = Number(item && item.priority);
       if (Math.abs(value - 0.1) < 0.001) return 'trivial';
@@ -1316,7 +1384,9 @@ export default {
         this.task.completed = !this.task.completed;
         this.playTaskScoreSound(this.task, direction);
       } else {
-        this.taskScore(this.task, direction);
+        const completeChecklist = await this.confirmCompleteChecklist(direction);
+        if (completeChecklist === null) return;
+        this.taskScore(this.task, direction, { completeChecklist });
       }
     },
     handleBrokenTask (task) {

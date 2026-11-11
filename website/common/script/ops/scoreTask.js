@@ -310,6 +310,31 @@ export function scoreChecklistItem ({ user, task, item } = {}) {
   return delta;
 }
 
+// Personal To Dos can complete their own checklist. Shared group tasks and
+// challenge templates keep checklist completion manual.
+export function taskAllowsChecklistCompletion (task) {
+  if (!task || task.type !== 'todo') return false;
+  if (task.group && task.group.id) return false;
+  if (task.challenge && task.challenge.id && !task.userId) return false;
+  return true;
+}
+
+// Marks incomplete To Do checklist items complete and grants each item's reward.
+export function completeOpenChecklistItems ({ user, task } = {}) {
+  if (!taskAllowsChecklistCompletion(task) || !user || !Array.isArray(task.checklist)) return 0;
+
+  let completed = 0;
+  task.checklist.forEach(item => {
+    if (!item || item.completed) return;
+    item.completed = true;
+    scoreChecklistItem({ user, task, item });
+    completed += 1;
+  });
+
+  if (completed > 0 && task.markModified) task.markModified('checklist');
+  return completed;
+}
+
 // previousItems is the full checklist from before this edit. Pass [] when every
 // item is new. Completion changes award or remove that item's reward.
 export function applyChecklistRewardDiff (user, task, previousItems = []) {
@@ -339,8 +364,25 @@ export function applyChecklistRewardDiff (user, task, previousItems = []) {
 
 export default function scoreTask (options = {}, req = {}) {
   const {
-    user, task, direction, times = 1, cron = false,
+    user, task, direction, times = 1, cron = false, completeChecklist = false,
   } = options;
+
+  // Thanks to open group tasks, userId is not guaranteed. Don't allow scoring inaccessible tasks
+  if (task.userId && task.userId !== user._id) {
+    throw new BadRequest('Cannot score task belonging to another user.');
+  } else if (task.group && task.group.id && user.guilds.indexOf(task.group.id) === -1
+    && user.party._id !== task.group.id) {
+    throw new BadRequest('Cannot score task belonging to another user.');
+  }
+  // If they're trying to purchase a too-expensive reward, don't allow them to do that.
+  if (task.value > user.stats.gp && task.type === 'reward') throw new NotAuthorized(i18n.t('messageNotEnoughGold', req.language));
+
+  // Award open checklist items before the parent snapshot so their Experience,
+  // Gold, and Mana stay when the To Do itself is scored.
+  if (completeChecklist && direction === 'up' && !cron) {
+    completeOpenChecklistItems({ user, task });
+  }
+
   let delta = 0;
   const stats = {
     gp: user.stats.gp,
@@ -357,16 +399,6 @@ export default function scoreTask (options = {}, req = {}) {
   user._tmp = {};
 
   if (oldLeveledUp) user._tmp.leveledUp = oldLeveledUp;
-
-  // Thanks to open group tasks, userId is not guaranteed. Don't allow scoring inaccessible tasks
-  if (task.userId && task.userId !== user._id) {
-    throw new BadRequest('Cannot score task belonging to another user.');
-  } else if (task.group && task.group.id && user.guilds.indexOf(task.group.id) === -1
-    && user.party._id !== task.group.id) {
-    throw new BadRequest('Cannot score task belonging to another user.');
-  }
-  // If they're trying to purchase a too-expensive reward, don't allow them to do that.
-  if (task.value > user.stats.gp && task.type === 'reward') throw new NotAuthorized(i18n.t('messageNotEnoughGold', req.language));
 
   if (task.type === 'habit') {
     delta += _changeTaskValue(user, task, direction, times, cron);
