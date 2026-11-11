@@ -16,6 +16,7 @@
     <external-link-modal />
     <purchase-confirm-modal v-if="isUserLoaded" />
     <delete-task-confirm-modal v-if="isUserLoaded" />
+    <complete-checklist-confirm-modal v-if="isUserLoaded" />
     <template v-if="isUserLoaded">
       <privacy-banner />
       <damage-paused-banner />
@@ -135,6 +136,7 @@ import subCanceledModal from '@/components/payments/canceledModal';
 import externalLinkModal from '@/components/externalLinkModal.vue';
 import purchaseConfirmModal from '@/components/shops/purchaseConfirmModal.vue';
 import deleteTaskConfirmModal from '@/components/tasks/deleteTaskConfirmModal.vue';
+import completeChecklistConfirmModal from '@/components/tasks/completeChecklistConfirmModal.vue';
 
 import spellsMixin from '@/mixins/spells';
 import {
@@ -167,6 +169,7 @@ export default {
     externalLinkModal,
     purchaseConfirmModal,
     deleteTaskConfirmModal,
+    completeChecklistConfirmModal,
   },
   mixins: [notifications, spellsMixin],
   data () {

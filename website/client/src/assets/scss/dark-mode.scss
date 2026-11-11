@@ -109,12 +109,17 @@ html[data-theme='dark'] .theme-app {
   .task-notes,
   .checklist-item,
   .collapse-checklist,
+  .show-completed-checklist,
   .dropdown-icon {
     color: $dark-muted;
   }
 
   .collapse-checklist {
     background-color: $dark-raised;
+  }
+
+  .show-completed-checklist {
+    color: $purple-300;
   }
 
   h3.markdown,

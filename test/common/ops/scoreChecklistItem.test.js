@@ -1,5 +1,6 @@
 import scoreTask, {
   applyChecklistRewardDiff,
+  completeOpenChecklistItems,
   scoreChecklistItem,
 } from '../../../website/common/script/ops/scoreTask';
 import crit from '../../../website/common/script/fns/crit';
@@ -208,6 +209,88 @@ describe('scoreChecklistItem', () => {
     expect(task.checklist[0].value).to.equal(1);
     expect(task.checklist[1].value).to.be.greaterThan(0);
     expect(task.checklist[1].scoredPriority).to.equal(2);
+  });
+
+  it('rewards open checklist items when a to do is completed with them', () => {
+    const withItems = freshUser();
+    const parentOnly = freshUser();
+    const checklist = [
+      {
+        id: '11111111-1111-4111-8111-111111111111',
+        text: 'Still open',
+        completed: false,
+        priority: 2,
+        value: 0,
+      },
+      {
+        id: '22222222-2222-4222-8222-222222222222',
+        text: 'Already done',
+        completed: true,
+        priority: 1,
+        value: 3,
+        scoredPriority: 1,
+      },
+    ];
+    const task = generateTodo({ userId: withItems._id, checklist });
+    const plain = generateTodo({
+      userId: parentOnly._id,
+      checklist: checklist.map(item => ({ ...item })),
+    });
+
+    scoreTask({
+      user: withItems, task, direction: 'up', completeChecklist: true,
+    });
+    scoreTask({ user: parentOnly, task: plain, direction: 'up' });
+
+    expect(task.completed).to.equal(true);
+    expect(task.checklist[0].completed).to.equal(true);
+    expect(task.checklist[0].value).to.be.greaterThan(0);
+    expect(task.checklist[0].scoredPriority).to.equal(2);
+    expect(task.checklist[1].value).to.equal(3);
+    expect(plain.checklist[0].completed).to.equal(false);
+    expect(withItems.stats.exp).to.be.greaterThan(parentOnly.stats.exp);
+    expect(withItems.stats.gp).to.be.greaterThan(parentOnly.stats.gp);
+    expect(withItems.stats.mp).to.be.greaterThan(parentOnly.stats.mp);
+  });
+
+  it('does not complete or reward checklist items unless asked', () => {
+    const user = freshUser();
+    const beforeExp = user.stats.exp;
+    const task = generateTodo({
+      userId: user._id,
+      checklist: [
+        {
+          text: 'Still open', completed: false, priority: 2, value: 0,
+        },
+      ],
+    });
+
+    scoreTask({ user, task, direction: 'up' });
+
+    expect(task.completed).to.equal(true);
+    expect(task.checklist[0].completed).to.equal(false);
+    expect(task.checklist[0].value).to.equal(0);
+    expect(user.stats.exp).to.be.greaterThan(beforeExp);
+  });
+
+  it('does not complete a group task checklist from the parent', () => {
+    const user = freshUser();
+    const beforeExp = user.stats.exp;
+    const task = generateTodo({
+      userId: user._id,
+      group: { id: '55555555-5555-4555-8555-555555555555' },
+      checklist: [
+        {
+          text: 'Shared step', completed: false, priority: 2, value: 0,
+        },
+      ],
+    });
+
+    const rewarded = completeOpenChecklistItems({ user, task });
+
+    expect(rewarded).to.equal(0);
+    expect(task.checklist[0].completed).to.equal(false);
+    expect(user.stats.exp).to.equal(beforeExp);
   });
 
   it('does not award edits to a challenge template', () => {
