@@ -31,6 +31,7 @@ import openMysteryItem from './openMysteryItem';
 import scoreTask, {
   applyChecklistRewardDiff,
   canAwardChecklistEdit,
+  completeOpenChecklistItems,
   scoreChecklistItem,
 } from './scoreTask';
 import markPmsRead from './markPMSRead';
@@ -70,6 +71,7 @@ export default {
   openMysteryItem,
   scoreTask,
   scoreChecklistItem,
+  completeOpenChecklistItems,
   applyChecklistRewardDiff,
   canAwardChecklistEdit,
   markPmsRead,

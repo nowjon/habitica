@@ -640,6 +640,8 @@ export const UserSchema = new Schema({
       groupByChallenge: { $type: Boolean, default: false }, // @TODO remove? not used
       confirmScoreNotes: { $type: Boolean, default: false }, // @TODO remove? not used
       hideRewards: { $type: Boolean, default: false },
+      // Completed To Do checklist items stay hidden until the player asks to see them.
+      showCompletedChecklist: { $type: Boolean, default: false },
       mirrorGroupTasks: [
         { $type: String, validate: [v => validator.isUUID(v), 'Invalid group UUID.'], ref: 'Group' },
       ],

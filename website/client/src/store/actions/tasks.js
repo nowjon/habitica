@@ -160,8 +160,9 @@ export async function save (store, editedTask) {
   if (originalTask) Object.assign(originalTask, response.data.data);
 }
 
-export async function score (store, { taskId, direction }) {
-  const res = await axios.post(`/api/v4/tasks/${taskId}/score/${direction}`);
+export async function score (store, { taskId, direction, completeChecklist }) {
+  const checklistFlag = completeChecklist ? '?completeChecklist=true' : '';
+  const res = await axios.post(`/api/v4/tasks/${taskId}/score/${direction}${checklistFlag}`);
   return res;
 }
 

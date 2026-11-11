@@ -229,6 +229,56 @@ describe('POST /tasks/:id/score/:direction', () => {
       expect(task.dateCompleted).to.be.a('string'); // date gets converted to a string as json doesn't have a Date type
     });
 
+    it('completes open checklist items and rewards them when requested', async () => {
+      const withChecklist = await user.post('/tasks/user', {
+        text: 'parent todo',
+        type: 'todo',
+        checklist: [
+          {
+            text: 'open step', completed: false, priority: 2,
+          },
+          {
+            text: 'done step', completed: true, priority: 1,
+          },
+        ],
+      });
+      const before = await user.get('/user');
+
+      await user.post(`/tasks/${withChecklist._id}/score/up?completeChecklist=true`);
+
+      const saved = await user.get(`/tasks/${withChecklist._id}`);
+      const after = await user.get('/user');
+      const openItem = saved.checklist.find(item => item.text === 'open step');
+      const doneItem = saved.checklist.find(item => item.text === 'done step');
+
+      expect(saved.completed).to.equal(true);
+      expect(openItem.completed).to.equal(true);
+      expect(openItem.value).to.be.greaterThan(0);
+      expect(doneItem.completed).to.equal(true);
+      expect(after.stats.exp).to.be.greaterThan(before.stats.exp);
+      expect(after.stats.gp).to.be.greaterThan(before.stats.gp);
+      expect(after.stats.mp).to.be.greaterThan(before.stats.mp);
+    });
+
+    it('leaves open checklist items incomplete when the to do is completed alone', async () => {
+      const withChecklist = await user.post('/tasks/user', {
+        text: 'parent todo alone',
+        type: 'todo',
+        checklist: [
+          {
+            text: 'open step', completed: false, priority: 1,
+          },
+        ],
+      });
+
+      await user.post(`/tasks/${withChecklist._id}/score/up`);
+      const saved = await user.get(`/tasks/${withChecklist._id}`);
+
+      expect(saved.completed).to.equal(true);
+      expect(saved.checklist[0].completed).to.equal(false);
+      expect(saved.checklist[0].value || 0).to.equal(0);
+    });
+
     it('moves completed todos out of user.tasksOrder.todos', async () => {
       const getUser = await user.get('/user');
       expect(getUser.tasksOrder.todos.indexOf(todo._id)).to.not.equal(-1);
