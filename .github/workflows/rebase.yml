@@ -48,6 +48,14 @@ jobs:
           git config --local user.name  "GitHub Actions"
 
           git rebase upstream/release
+
+          # Upstream release edits .github/workflows. The Actions token cannot
+          # push those files, and this fork keeps its own workflows.
+          if ! git diff --quiet origin/main -- .github/workflows; then
+              git checkout origin/main -- .github/workflows
+              git commit -m "chore(ci): keep homelab workflows across upstream rebase"
+          fi
+
           if [ "$(git status | grep diverged)" ]; then
               git push origin "$(git branch --show-current)" --force-with-lease
               echo "rebased=true" >> "$GITHUB_OUTPUT"
